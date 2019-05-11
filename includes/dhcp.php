@@ -15,10 +15,13 @@ function DisplayDHCPConfig()
         if (CSRFValidate()) {
             $errors = '';
             define('IFNAMSIZ', 16);
-            if (!preg_match('/^[a-zA-Z0-9]+$/', $_POST['interface']) ||
+
+
+            /*if (!preg_match('/^[a-zA-Z0-9]+$/', $_POST['interface']) ||
             strlen($_POST['interface']) >= IFNAMSIZ) {
                   $errors .= _('Invalid interface name.').'<br />'.PHP_EOL;
-            }
+            }*/
+
 
             if (!preg_match('/^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\z/', $_POST['RangeStart']) &&
             !empty($_POST['RangeStart'])) {  // allow ''/null ?
@@ -40,7 +43,7 @@ function DisplayDHCPConfig()
 
             $return = 1;
             if (empty($errors)) {
-                $config = 'interface='.$_POST['interface'].PHP_EOL.
+                $config = 'interface='.RASPI_WIFI_HOTSPOT_INTERFACE.PHP_EOL.
                       'dhcp-range='.$_POST['RangeStart'].','.$_POST['RangeEnd'].
                       ',255.255.255.0,';
                 if ($_POST['RangeLeaseTimeUnits'] !== 'infinite') {
@@ -48,8 +51,8 @@ function DisplayDHCPConfig()
                 }
 
                 $config .= $_POST['RangeLeaseTimeUnits'];
-                exec('echo "'.$config.'" > /tmp/dhcpddata', $temp);
-                system('sudo cp /tmp/dhcpddata '.RASPI_DNSMASQ_CONFIG, $return);
+                exec('echo "'.$config.'" > /tmp/dnsmasqdata', $temp);
+                system('sudo cp /tmp/dnsmasqdata '.RASPI_DNSMASQ_CONFIG, $return);
             } else {
                 $status->addMessage($errors, 'danger');
             }
@@ -157,26 +160,14 @@ function DisplayDHCPConfig()
     <h4>DHCP server settings</h4>
     <form method="POST" action="?page=dhcpd_conf">
     <?php CSRFToken() ?>
-    <div class="row">
+    <!-- <div class="row">
       <div class="form-group col-md-4">
         <label for="code">Interface</label>
-        <select class="form-control" name="interface">
-<?php
-        exec("ip -o link show | awk -F': ' '{print $2}'", $interfaces);
-
-foreach ($interfaces as $inet) {
-    $select = '';
-    if ($inet === $conf['interface']) {
-        $select = ' selected="selected"';
-    }
-
-    echo '        <option value="'.htmlspecialchars($inet, ENT_QUOTES).'"'.
-    $select.'>'.htmlspecialchars($inet, ENT_QUOTES).'</option>' , PHP_EOL;
-}
-?>
+        <select class="form-control" disabled attr name="interface">
+            <option value="<?php echo RASPI_WIFI_HOTSPOT_INTERFACE;?>"><?php echo RASPI_WIFI_HOTSPOT_INTERFACE;?></option>
         </select>
       </div>
-    </div>
+    </div> -->
     <div class="row">
       <div class="form-group col-md-4">
         <label for="code"><?php echo _("Starting IP Address"); ?></label>
@@ -192,11 +183,11 @@ foreach ($interfaces as $inet) {
     </div>
 
     <div class="row">
-      <div class="form-group col-xs-2 col-sm-2">
+      <div class="form-group col-xs-2 col-sm-3">
         <label for="code"><?php echo _("Lease Time"); ?></label>
         <input type="text" class="form-control" name="RangeLeaseTime" value="<?php echo htmlspecialchars($arrRangeLeaseTime[1], ENT_QUOTES); ?>" />
       </div>
-      <div class="col-xs-2 col-sm-2">
+      <div class="form-group col-xs-2 col-sm-3">
         <label for="code"><?php echo _("Interval"); ?></label>
         <select name="RangeLeaseTimeUnits" class="form-control" >
           <option value="m"<?php echo $mselected; ?>><?php echo _("Minute(s)"); ?></option>

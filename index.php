@@ -25,6 +25,7 @@ include_once(RASPI_CONFIG.'/raspap.php');
 include_once('includes/locale.php');
 include_once('includes/functions.php');
 include_once('includes/dashboard.php');
+include_once('includes/twinbridge.php');
 include_once('includes/authenticate.php');
 include_once('includes/admin.php');
 include_once('includes/dhcp.php');
@@ -129,51 +130,56 @@ $theme_url = 'dist/css/'.htmlspecialchars($theme, ENT_QUOTES);
               <li>
                 <a href="index.php?page=wlan0_info"><i class="fa fa-dashboard fa-fw"></i> <?php echo _("Dashboard"); ?></a>
               </li>
+              <?php if (RASPI_TWINBRIDGE_ENABLED) : ?>
+              <li>
+                <a href="index.php?page=twinbridge"><i class="fa fa-plug fa-fw"></i> <?php echo _("TwinBridge"); ?></a>
+              </li>
+            <?php endif; ?>
             <?php if (RASPI_WIFICLIENT_ENABLED) : ?>
               <li>
                 <a href="index.php?page=wpa_conf"><i class="fa fa-wifi fa-fw"></i> <?php echo _("Configure WiFi client"); ?></a>
-          </li>
-                <?php endif; ?>
-                <?php if (RASPI_HOTSPOT_ENABLED) : ?>
+              </li>
+            <?php endif; ?>
+            <?php if (RASPI_HOTSPOT_ENABLED) : ?>
               <li>
                 <a href="index.php?page=hostapd_conf"><i class="fa fa-dot-circle-o fa-fw"></i> <?php echo _("Configure hotspot"); ?></a>
               </li>
-                <?php endif; ?>
-                <?php if (RASPI_NETWORK_ENABLED) : ?>
+            <?php endif; ?>
+            <?php if (RASPI_NETWORK_ENABLED) : ?>
               <li>
                  <a href="index.php?page=network_conf"><i class="fa fa-sitemap fa-fw"></i> <?php echo _("Configure networking"); ?></a>
               </li> 
-                <?php endif; ?>
-                <?php if (RASPI_DHCP_ENABLED) : ?>
+            <?php endif; ?>
+            <?php if (RASPI_DHCP_ENABLED) : ?>
               <li>
                 <a href="index.php?page=dhcpd_conf"><i class="fa fa-exchange fa-fw"></i> <?php echo _("Configure DHCP Server"); ?></a>
               </li>
-                <?php endif; ?>
-                <?php if (RASPI_OPENVPN_ENABLED) : ?>
+            <?php endif; ?>
+            <?php if (RASPI_OPENVPN_ENABLED) : ?>
               <li>
                 <a href="index.php?page=openvpn_conf"><i class="fa fa-lock fa-fw"></i> <?php echo _("Configure OpenVPN"); ?></a>
               </li>
-                <?php endif; ?>
-                <?php if (RASPI_TORPROXY_ENABLED) : ?>
+            <?php endif; ?>
+            <?php if (RASPI_TORPROXY_ENABLED) : ?>
               <li>
                  <a href="index.php?page=torproxy_conf"><i class="fa fa-eye-slash fa-fw"></i> <?php echo _("Configure TOR proxy"); ?></a>
               </li>
-                <?php endif; ?>
-                <?php if (RASPI_CONFAUTH_ENABLED) : ?>
+            <?php endif; ?>
+            <?php if (RASPI_CONFAUTH_ENABLED) : ?>
               <li>
                 <a href="index.php?page=auth_conf"><i class="fa fa-lock fa-fw"></i> <?php echo _("Configure Auth"); ?></a>
               </li>
-                <?php endif; ?>
-                <?php if (RASPI_CHANGETHEME_ENABLED) : ?>
+            <?php endif; ?>
+            <?php if (RASPI_CHANGETHEME_ENABLED) : ?>
               <li>
                 <a href="index.php?page=theme_conf"><i class="fa fa-wrench fa-fw"></i> <?php echo _("Change Theme"); ?></a>
               </li>
-                <?php endif; ?>
-                <?php if (RASPI_VNSTAT_ENABLED) : ?>
+            <?php endif; ?>
+            <?php if (RASPI_VNSTAT_ENABLED) : ?>
               <li>
                 <a href="index.php?page=data_use"><i class="fa fa-bar-chart fa-fw"></i> <?php echo _("Data usage"); ?></a>
               </li>
-                <?php endif; ?>
+            <?php endif; ?>
               <li>
                 <a href="index.php?page=system_info"><i class="fa fa-cube fa-fw"></i> <?php echo _("System"); ?></a>
               </li>
@@ -202,6 +208,9 @@ $theme_url = 'dist/css/'.htmlspecialchars($theme, ENT_QUOTES);
         switch ($page) {
             case "wlan0_info":
                 DisplayDashboard();
+                break;
+            case "twinbridge":
+                DisplayTwinBridge();
                 break;
             case "dhcpd_conf":
                 DisplayDHCPConfig();
@@ -267,6 +276,9 @@ $theme_url = 'dist/css/'.htmlspecialchars($theme, ENT_QUOTES);
 
     <!-- Custom RaspAP JS -->
     <script src="js/custom.js"></script>
+
+    <!-- Custom TwinBridge JS -->
+    <script src="js/twinbridge.js"></script>
 
 <?php
 // Load non default JS/ECMAScript in footer.

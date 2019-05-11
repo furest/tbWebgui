@@ -14,22 +14,17 @@ function DisplayHostAPDConfig()
     $arr80211Standard = array('a','b','g','n');
     $arrSecurity = array(1 => 'WPA', 2 => 'WPA2', 3 => 'WPA+WPA2', 'none' => _("None"));
     $arrEncType = array('TKIP' => 'TKIP', 'CCMP' => 'CCMP', 'TKIP CCMP' => 'TKIP+CCMP');
-    exec("ip -o link show | awk -F': ' '{print $2}'", $interfaces);
 
     if (isset($_POST['SaveHostAPDSettings'])) {
         if (CSRFValidate()) {
-            SaveHostAPDConfig($arrSecurity, $arrEncType, $arr80211Standard, $interfaces, $status);
+            SaveHostAPDConfig($arrSecurity, $arrEncType, $arr80211Standard, $status);
         } else {
             error_log('CSRF violation');
         }
     } elseif (isset($_POST['StartHotspot'])) {
         if (CSRFValidate()) {
             $status->addMessage('Attempting to start hotspot', 'info');
-            if ($arrHostapdConf['WifiAPEnable'] == 1) {
-                exec('sudo /etc/raspap/hostapd/servicestart.sh --interface uap0 --seconds 3', $return);
-            } else {
-                exec('sudo /etc/raspap/hostapd/servicestart.sh --seconds 5', $return);
-            }
+            exec('sudo /etc/raspap/hostapd/servicestart.sh --seconds 5', $return);
             foreach ($return as $line) {
                 $status->addMessage($line, 'info');
             }
@@ -82,7 +77,6 @@ function DisplayHostAPDConfig()
               <li class="active"><a href="#basic" data-toggle="tab"><?php echo _("Basic"); ?></a></li>
               <li><a href="#security" data-toggle="tab"><?php echo _("Security"); ?></a></li>
               <li><a href="#advanced" data-toggle="tab"><?php echo _("Advanced"); ?></a></li>
-              <li><a href="#logoutput" data-toggle="tab"><?php echo _("Logfile"); ?></a></li>
             </ul>
 
             <!-- Tab panes -->
@@ -91,14 +85,6 @@ function DisplayHostAPDConfig()
 
                 <h4><?php echo _("Basic settings") ;?></h4>
                 <?php CSRFToken() ?>
-                <div class="row">
-                  <div class="form-group col-md-4">
-                    <label for="cbxinterface"><?php echo _("Interface") ;?></label>
-                    <?php
-                      SelectorOptions('interface', $interfaces, $arrConfig['interface'], 'cbxinterface');
-                    ?>
-                  </div>
-                </div>
                 <div class="row">
                   <div class="form-group col-md-4">
                     <label for="txtssid"><?php echo _("SSID"); ?></label>
@@ -166,51 +152,8 @@ function DisplayHostAPDConfig()
                   </div>
                 </div>
               </div>
-              <div class="tab-pane fade" id="logoutput">
-          <h4><?php echo _("Logfile output"); ?></h4>
-                  <div class="row">
-                    <div class="form-group col-md-8">
-                        <?php
-                        if ($arrHostapdConf['LogEnable'] == 1) {
-                            $log = file_get_contents('/tmp/hostapd.log');
-                            echo '<br /><textarea class="logoutput">'.htmlspecialchars($log, ENT_QUOTES).'</textarea>';
-                        } else {
-                            echo "<br />Logfile output not enabled";
-                        }
-                        ?>
-                   </div>
-                </div>
-              </div>
               <div class="tab-pane fade" id="advanced">
         <h4><?php echo _("Advanced settings"); ?></h4>
-                <div class="row">
-                  <div class="col-md-4">
-            <div class="checkbox">
-<?php
-$checkedWifiAPEnabled = '';
-if ($arrHostapdConf['WifiAPEnable'] == 1) {
-    $checkedWifiAPEnabled = ' checked="checked"';
-}
-?>
-              <input id="chxwificlientap" name="wifiAPEnable" type="checkbox" class="form-check-input" data-toggle="toggle" data-on="Enabled" data-off="Disabled" data-width="100" value="1"<?php echo $checkedWifiAPEnabled; ?> />
-              <label class="form-check-label" for="chxwificlientap"><?php echo _("WiFi client AP mode"); ?></label>
-                    </div>
-                  </div>
-                </div>
-                <div class="row">
-                  <div class="col-md-4">
-            <div class="checkbox">
-<?php
-$checkedLogEnabled = '';
-if ($arrHostapdConf['LogEnable'] == 1) {
-    $checkedLogEnabled = ' checked="checked"';
-}
-?>
-              <input id="chxlogenable" name="logEnable" type="checkbox" class="form-check-input" data-toggle="toggle" data-on="Enabled" data-off="Disabled" data-width="100" value="1"<?php echo $checkedLogEnabled; ?> />
-              <label class="form-check-label" for="chxlogenable"><?php echo _("Logfile output"); ?></label>
-                    </div>
-                  </div>
-                </div>
                 <div class="row">
                   <div class="col-md-4">
             <div class="checkbox">
@@ -480,18 +423,18 @@ if ($arrConfig['ignore_broadcast_ssid'] == 1 || $arrConfig['ignore_broadcast_ssi
                     <option value="ZM">Zambia</option>
                     <option value="ZW">Zimbabwe</option>
                   </select>
-<script type="text/javascript">
-var country = document.getElementById("selected_country").value;
-var countries = document.getElementById("cbxcountries");
-var ops = countries.getElementsByTagName("option");
-for (var i = 0; i < ops.length; ++i) {
-    if(ops[i].value == country){
-        ops[i].selected=true;
-        break;
-    }
-}
+                    <script type="text/javascript">
+                    var country = document.getElementById("selected_country").value;
+                    var countries = document.getElementById("cbxcountries");
+                    var ops = countries.getElementsByTagName("option");
+                    for (var i = 0; i < ops.length; ++i) {
+                        if(ops[i].value == country){
+                            ops[i].selected=true;
+                            break;
+                        }
+                    }
 
-</script>
+                    </script>
                 </div>
               </div><!-- /.panel-body -->
             </div><!-- /.panel-primary -->
@@ -511,7 +454,7 @@ for (var i = 0; i < ops.length; ++i) {
 <?php
 }
 
-function SaveHostAPDConfig($wpa_array, $enc_types, $modes, $interfaces, $status)
+function SaveHostAPDConfig($wpa_array, $enc_types, $modes, $status)
 {
     // It should not be possible to send bad data for these fields so clearly
     // someone is up to something if they fail. Fail silently.
@@ -533,41 +476,6 @@ function SaveHostAPDConfig($wpa_array, $enc_types, $modes, $interfaces, $status)
     }
 
     $good_input = true;
-  
-    // Check for WiFi client AP mode checkbox
-    $wifiAPEnable = 0;
-    if ($arrHostapdConf['WifiAPEnable'] == 0) {
-        if (isset($_POST['wifiAPEnable'])) {
-            $wifiAPEnable = 1;
-        }
-    } else {
-        if (isset($_POST['wifiAPEnable'])) {
-            $wifiAPEnable = 1;
-        }
-    }
-
-    // Check for Logfile output checkbox
-    $logEnable = 0;
-    if ($arrHostapdConf['LogEnable'] == 0) {
-        if (isset($_POST['logEnable'])) {
-            $logEnable = 1;
-            exec('sudo /etc/raspap/hostapd/enablelog.sh');
-        } else {
-            exec('sudo /etc/raspap/hostapd/disablelog.sh');
-        }
-    } else {
-        if (isset($_POST['logEnable'])) {
-            $logEnable = 1;
-            exec('sudo /etc/raspap/hostapd/enablelog.sh');
-        } else {
-            exec('sudo /etc/raspap/hostapd/disablelog.sh');
-        }
-    }
-    $cfg = [];
-    $cfg['LogEnable'] = $logEnable;
-    $cfg['WifiAPEnable'] = $wifiAPEnable;
-    $cfg['WifiManaged'] = RASPI_WIFI_CLIENT_INTERFACE;
-    write_php_ini($cfg, '/etc/raspap/hostapd.ini');
 
     // Verify input
     if (empty($_POST['ssid']) || strlen($_POST['ssid']) > 32) {
@@ -596,12 +504,6 @@ function SaveHostAPDConfig($wpa_array, $enc_types, $modes, $interfaces, $status)
         $ignore_broadcast_ssid = '0';
     }
 
-    if (! in_array($_POST['interface'], $interfaces)) {
-        // The user is probably up to something here but it may also be a
-        // genuine error.
-        $status->addMessage('Unknown interface '.htmlspecialchars($_POST['interface'], ENT_QUOTES), 'danger');
-        $good_input = false;
-    }
 
     if (strlen($_POST['country_code']) !== 0 && strlen($_POST['country_code']) != 2) {
         $status->addMessage('Country code must be blank or two characters', 'danger');
@@ -628,11 +530,7 @@ function SaveHostAPDConfig($wpa_array, $enc_types, $modes, $interfaces, $status)
             $config.= 'ieee80211n=0'.PHP_EOL;
         }
         $config.= 'wpa_passphrase='.$_POST['wpa_passphrase'].PHP_EOL;
-        if ($wifiAPEnable == 1) {
-            $config.= 'interface=uap0'.PHP_EOL;
-        } else {
-            $config.= 'interface='.$_POST['interface'].PHP_EOL;
-        }
+        $config.= 'interface='.RASPI_WIFI_HOTSPOT_INTERFACE.PHP_EOL;
         $config.= 'wpa='.$_POST['wpa'].PHP_EOL;
         $config.= 'wpa_pairwise='.$_POST['wpa_pairwise'].PHP_EOL;
         $config.= 'country_code='.$_POST['country_code'].PHP_EOL;
@@ -641,58 +539,13 @@ function SaveHostAPDConfig($wpa_array, $enc_types, $modes, $interfaces, $status)
         exec('echo "'.$config.'" > /tmp/hostapddata', $temp);
         system("sudo cp /tmp/hostapddata " . RASPI_HOSTAPD_CONFIG, $return);
 
-        if ($wifiAPEnable == 1) {
-            // Enable uap0 configuration in dnsmasq for Wifi client AP mode
-            $config = 'interface=lo,uap0               # Enable uap0 interface for wireless client AP mode'.PHP_EOL;
-            $config.= 'bind-interfaces                 # Bind to the interfaces'.PHP_EOL;
-            $config.= 'server=8.8.8.8                  # Forward DNS requests to Google DNS'.PHP_EOL;
-            $config.= 'domain-needed                   # Don\'t forward short names'.PHP_EOL;
-            $config.= 'bogus-priv                      # Never forward addresses in the non-routed address spaces'.PHP_EOL;
-            $config.= 'dhcp-range=192.168.50.50,192.168.50.150,12h'.PHP_EOL;
-        } else {
-            // Fallback to default config
-            $config = 'domain-needed'.PHP_EOL;
-            $config.= 'interface='.$_POST['interface'].PHP_EOL;
-            $config.= 'dhcp-range=10.3.141.50,10.3.141.255,255.255.255.0,12h'.PHP_EOL;
-        }
-        exec('echo "'.$config.'" > /tmp/dhcpddata', $temp);
-        system('sudo cp /tmp/dhcpddata '.RASPI_DNSMASQ_CONFIG, $return);
-
-        if ($wifiAPEnable == 1) {
-            // Enable uap0 configuration in dhcpcd for Wifi client AP mode
-             $config = PHP_EOL.'# RaspAP uap0 configuration'.PHP_EOL;
-             $config.= 'interface uap0'.PHP_EOL;
-             $config.= 'static ip_address=192.168.50.1/24'.PHP_EOL;
-             $config.= 'nohook wpa_supplicant'.PHP_EOL;
-        } else {
-            // Default config
-            $config = '# RaspAP wlan0 configuration'.PHP_EOL;
-            $config.= 'hostname'.PHP_EOL;
-            $config.= 'clientid'.PHP_EOL;
-            $config.= 'persistent'.PHP_EOL;
-            $config.= 'option rapid_commit'.PHP_EOL;
-            $config.= 'option domain_name_servers, domain_name, domain_search, host_name'.PHP_EOL;
-            $config.= 'option classless_static_routes'.PHP_EOL;
-            $config.= 'option ntp_servers'.PHP_EOL;
-            $config.= 'require dhcp_server_identifier'.PHP_EOL;
-            $config.= 'slaac private'.PHP_EOL;
-            $config.= 'nohook lookup-hostname'.PHP_EOL;
-            $config.= 'interface '.RASPI_WIFI_CLIENT_INTERFACE.PHP_EOL;
-            $config.= 'static ip_address=10.3.141.1/24'.PHP_EOL;
-            $config.= 'static routers=10.3.141.1'.PHP_EOL;
-            $config.= 'static domain_name_server=1.1.1.1 8.8.8.8'.PHP_EOL;
-        }
-        exec('echo "'.$config.'" > /tmp/dhcpddata', $temp);
-        system('sudo cp /tmp/dhcpddata '.RASPI_DHCPCD_CONFIG, $return);
-
-
         if ($return == 0) {
             $status->addMessage('Wifi Hotspot settings saved', 'success');
         } else {
             $status->addMessage('Unable to save wifi hotspot settings', 'danger');
         }
     } else {
-        $status->addMessage('Unable to save wifi hotspot settings', 'danger');
+        $status->addMessage('Unable to save wifi hotspot settings due to bad input', 'danger');
         return false;
     }
 

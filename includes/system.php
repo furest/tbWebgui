@@ -62,34 +62,6 @@ function DisplaySystem()
 
     $status = new StatusMessages();
 
-    if (isset($_POST['SaveLanguage'])) {
-        if (CSRFValidate()) {
-            if (isset($_POST['locale'])) {
-                $_SESSION['locale'] = $_POST['locale'];
-                $status->addMessage('Language setting saved', 'success');
-            }
-        } else {
-            error_log('CSRF violation');
-        }
-    }
-
-    // define locales
-    $arrLocales = array(
-    'en_GB.UTF-8' => 'English',
-    'de_DE.UTF-8' => 'Deutsch',
-    'fr_FR.UTF-8' => 'Français',
-    'it_IT.UTF-8' => 'Italiano',
-    'pt_BR.UTF-8' => 'Português',
-    'sv_SE.UTF-8' => 'Svenska',
-    'nl_NL.UTF-8' => 'Nederlands',
-    'zh_CN.UTF-8' => '简体中文 (Chinese simplified)',
-    'cs_CZ.UTF-8' => 'Čeština',
-    'ru_RU.UTF-8' => 'Русский',
-    'es_MX.UTF-8' => 'Español',
-    'fi_FI.UTF-8' => 'Finnish',
-    'si_LK.UTF-8' => 'Sinhala'
-    );
-
     // hostname
     exec("hostname -f", $hostarray);
     $hostname = $hostarray[0];
@@ -163,8 +135,6 @@ if (isset($_POST['system_shutdown'])) {
   <form role="form" action="?page=system_info" method="POST">
   <ul class="nav nav-tabs" role="tablist">
     <li role="presentation" class="active systemtab"><a href="#system" aria-controls="system" role="tab" data-toggle="tab"><?php echo _("System"); ?></a></li>
-    <li role="presentation" class="languagetab"><a href="#language" aria-controls="language" role="tab" data-toggle="tab"><?php echo _("Language"); ?></a></li>
-    <li role="presentation" class="consoletab"><a href="#console" aria-controls="console" role="tab" data-toggle="tab"><?php echo _("Console"); ?></a></li>
   </ul>
 
   <div class="systemtabcontent tab-content">
@@ -197,27 +167,6 @@ if (isset($_POST['system_shutdown'])) {
           <input type="submit" class="btn btn-warning" name="system_shutdown" value="<?php echo _("Shutdown"); ?>" />
           <input type="button" class="btn btn-outline btn-primary" value="<?php echo _("Refresh"); ?>" onclick="document.location.reload(true)" />
           </form>
-        </div>
-      </div>
-    </div>
-
-    <div role="tabpanel" class="tab-pane" id="language">
-      <h4><?php echo _("Language settings") ;?></h4>
-        <?php CSRFToken() ?>
-      <div class="row">
-        <div class="form-group col-md-4">
-          <label for="code"><?php echo _("Select a language"); ?></label>
-            <?php SelectorOptions('locale', $arrLocales, $_SESSION['locale']); ?>
-        </div>
-      </div>
-      <input type="submit" class="btn btn-outline btn-primary" name="SaveLanguage" value="<?php echo _("Save settings"); ?>" />
-      <input type="button" class="btn btn-outline btn-primary" value="<?php echo _("Refresh"); ?>" onclick="document.location.reload(true)" />
-    </div>
-
-    <div role="tabpanel" class="tab-pane" id="console">
-      <div class="row">
-        <div class="col-lg-12"> 
-          <iframe src="includes/webconsole.php" class="webconsole"></iframe>
         </div>
       </div>
     </div>

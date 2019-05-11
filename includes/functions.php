@@ -7,6 +7,9 @@ function mask2cidr($mask)
     $base = ip2long('255.255.255.255');
     return 32-log(($long ^ $base)+1, 2);
 }
+function cidr2mask($cidr) {
+    return long2ip(-1 << (32 - (int)$cidr));
+}
 
 /* Functions to write ini files */
 
@@ -190,9 +193,13 @@ function ConvertToSecurity($security)
             $protocol = $protocol_match[1];
             $matchArr = explode('-', $match);
             if (count($matchArr) > 2) {
-                $options[] = htmlspecialchars($protocol . ' ('. $matchArr[2] .')', ENT_QUOTES);
+                $options[] = htmlspecialchars($protocol . '-' . $matchArr[1] . ' ('. $matchArr[2] .')', ENT_QUOTES);
             } else {
-                $options[] = htmlspecialchars($protocol, ENT_QUOTES);
+                if(count($matchArr) == 2){
+                    $options[] = htmlspecialchars($protocol. '-' . $matchArr[1], ENT_QUOTES);
+                } else {
+                    $options[] = htmlspecialchars($protocol, ENT_QUOTES);
+                }
             }
         }
     }

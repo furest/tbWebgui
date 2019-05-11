@@ -29,11 +29,11 @@ function DisplayWPAConfig()
                         $ssid = trim($lineArr[1], '"');
                         break;
                     case 'psk':
-                        if (array_key_exists('passphrase', $network)) {
+                        if (array_key_exists('passphrase', $network)) { //Skips if passphrase already read. Falls through otherwise
                             break;
                         }
-                    case '#psk':
-                        $network['protocol'] = 'WPA';
+                    case '#psk': //Recognises the protocol is WPA-PSK. Falls through.
+                        //do nothing
                     case 'wep_key0': // Untested
                         $network['passphrase'] = trim($lineArr[1], '"');
                         break;
@@ -41,9 +41,28 @@ function DisplayWPAConfig()
                         if (! array_key_exists('passphrase', $network) && $lineArr[1] === 'NONE') {
                             $network['protocol'] = 'Open';
                         }
+                        else{
+                            $network['protocol'] = trim($lineArr[1], '"');
+                        }
                         break;
                     case 'priority':
                         $network['priority'] = trim($lineArr[1], '"');
+                        break;
+                    case 'eap':
+                        $network['firstphase'] = trim($lineArr[1], '"');
+                        break;
+                    case 'phase2': //phase2="auth=MSCHAPV2" => [0] = phase2, [1] = "auth, [2] = MSCHAPV2"
+                        if (trim($lineArr[1], '"') === "auth" && count($lineArr) > 2){
+                            $network['secondphase'] = trim($lineArr[2],'"');
+                        } else {
+                            $network['secondphase'] = trim($lineArr[1],'"');
+                        }
+                        break;
+                    case 'identity':
+                        $network['username'] = trim($lineArr[1], '"');
+                        break;
+                    case 'password':
+                        $network['passphrase'] = trim($lineArr[1], '"');
                         break;
                 }
             }
@@ -58,18 +77,29 @@ function DisplayWPAConfig()
         if ($wpa_file = fopen('/tmp/wifidata', 'w')) {
             fwrite($wpa_file, 'ctrl_interface=DIR=' . RASPI_WPA_CTRL_INTERFACE . ' GROUP=netdev' . PHP_EOL);
             fwrite($wpa_file, 'update_config=1' . PHP_EOL);
-
             foreach (array_keys($_POST) as $post) {
                 if (preg_match('/delete(\d+)/', $post, $post_match)) {
                     unset($tmp_networks[$_POST['ssid' . $post_match[1]]]);
                 } elseif (preg_match('/update(\d+)/', $post, $post_match)) {
                     // NB, at the moment, the value of protocol from the form may
                     // contain HTML line breaks
-                    $tmp_networks[$_POST['ssid' . $post_match[1]]] = array(
-                    'protocol' => ( $_POST['protocol' . $post_match[1]] === 'Open' ? 'Open' : 'WPA' ),
-                    'passphrase' => $_POST['passphrase' . $post_match[1]],
-                    'configured' => true
-                    );
+                    if(preg_match('/^(WPA\d?-EAP)/', $_POST['protocol' . $post_match[1]])) {
+                        $tmp_networks[$_POST['ssid' . $post_match[1]]] = array(
+                            'protocol' =>  "WPA-EAP",
+                            'passphrase' => $_POST['passphrase' . $post_match[1]],
+                            'username' => $_POST['username' . $post_match[1]],
+                            'firstphase' => $_POST['firstphase' . $post_match[1]],
+                            'secondphase' => $_POST['secondphase' . $post_match[1]],
+                            'configured' => true
+                            );
+                    } else {
+                        $tmp_networks[$_POST['ssid' . $post_match[1]]] = array(
+                            'protocol' =>   ( $_POST['protocol' . $post_match[1]] === 'Open' ? 'Open' : 'WPA-PSK' ),
+                            'passphrase' => $_POST['passphrase' . $post_match[1]],
+                            'configured' => true
+                            );
+                    }
+
                     if (array_key_exists('priority' . $post_match[1], $_POST)) {
                         $tmp_networks[$_POST['ssid' . $post_match[1]]]['priority'] = $_POST['priority' . $post_match[1]];
                     }
@@ -86,7 +116,26 @@ function DisplayWPAConfig()
                         fwrite($wpa_file, "\tpriority=".$network['priority'].PHP_EOL);
                     }
                     fwrite($wpa_file, "}".PHP_EOL);
-                } else {
+                }elseif ($network['protocol'] === 'WPA-EAP') {
+                    if (strlen($network['passphrase']) >=8 && strlen($network['passphrase']) <= 63) {
+                        fwrite($wpa_file, "network={".PHP_EOL);
+                        fwrite($wpa_file, "\tssid=\"".$ssid."\"".PHP_EOL);
+                        fwrite($wpa_file, "\tkey_mgmt=WPA-EAP".PHP_EOL);
+                        fwrite($wpa_file, "\teap=".$network['firstphase'].PHP_EOL);
+                        if ($network['secondphase'] !== 'None') {
+                            fwrite($wpa_file, "\tphase2=\"auth=".$network['secondphase']."\"".PHP_EOL);
+                        }
+                        fwrite($wpa_file, "\tidentity=\"".$network['username']."\"".PHP_EOL);
+                        fwrite($wpa_file, "\tpassword=\"".$network['passphrase']."\"".PHP_EOL);
+                        if (array_key_exists('priority', $network)) {
+                            fwrite($wpa_file, "\tpriority=".$network['priority'].PHP_EOL);
+                        }
+                        fwrite($wpa_file, "}".PHP_EOL);
+                    } else {
+                        $status->addMessage('WPA passphrase must be between 8 and 63 characters', 'danger');
+                        $ok = false;
+                    }
+                } else{
                     if (strlen($network['passphrase']) >=8 && strlen($network['passphrase']) <= 63) {
                         unset($wpa_passphrase);
                         unset($line);
@@ -96,6 +145,7 @@ function DisplayWPAConfig()
                                 if (array_key_exists('priority', $network)) {
                                     fwrite($wpa_file, "\tpriority=".$network['priority'].PHP_EOL);
                                 }
+                                fwrite($wpa_file, "\tkey_mgmt=WPA-PSK".PHP_EOL);
                                 fwrite($wpa_file, $line.PHP_EOL);
                             } else {
                                 fwrite($wpa_file, $line.PHP_EOL);
@@ -105,11 +155,11 @@ function DisplayWPAConfig()
                         $status->addMessage('WPA passphrase must be between 8 and 63 characters', 'danger');
                         $ok = false;
                     }
-                }
+                } 
             }
 
             if ($ok) {
-                system('sudo cp /tmp/wifidata ' . RASPI_WPA_SUPPLICANT_CONFIG, $returnval);
+                system('sudo cp /tmp/wifidata ' . RASPI_WPA_SUPPLICANT_CONFIG.'.test', $returnval);
                 if ($returnval == 0) {
                     exec('sudo wpa_cli -i ' . RASPI_WIFI_CLIENT_INTERFACE . ' reconfigure', $reconfigure_out, $reconfigure_return);
                     if ($reconfigure_return == 0) {
@@ -244,16 +294,40 @@ function DisplayWPAConfig()
                     </div>
                   </div>
 
-                    <?php if (array_key_exists('priority', $network)) { ?>
-                      <input type="hidden" name="priority<?php echo $index ?>" value="<?php echo htmlspecialchars($network['priority'], ENT_QUOTES); ?>" />
-                    <?php } ?>
                   <input type="hidden" name="protocol<?php echo $index ?>" value="<?php echo htmlspecialchars($network['protocol'], ENT_QUOTES); ?>" />
 
                   <div class="row">
                     <div class="col-xs-4 col-md-4">Security</div>
                     <div class="col-xs-6 col-md-6"><?php echo $network['protocol'] ?></div>
                   </div>
-
+                    <?php if(preg_match('/^(WPA\d?-EAP)/', $network['protocol'])) { ?>
+                      <div class="form-group">
+                        <div class="input-group col-xs-12 col-md-12">
+                          <span class="input-group-addon" id="phase1">Phase 1</span>
+                          <select class="form-control" aria-describedby="" name="firstphase<?php echo $index ?>">
+                            <option <?php if($network['firstphase'] == "PEAP"){echo('selected="true"');}?>>PEAP</option>
+                            <option <?php if($network['firstphase'] == "TLS"){echo('selected="true"');}?>>TLS</option>
+                            <option <?php if($network['firstphase'] == "TTLS"){echo('selected="true"');}?>>TTLS</option>
+                          </select>
+                        </div>
+                      </div>
+                      <div class="form-group">
+                        <div class="input-group col-xs-12 col-md-12">
+                          <span class="input-group-addon" id="phase2">Phase 2</span>
+                          <select class="form-control" aria-describedby="" name="secondphase<?php echo $index ?>">
+                            <option <?php if($network['secondphase'] == "None"){echo('selected="true"');}?>>None</option>
+                            <option <?php if($network['secondphase'] == "MSCHAPV2"){echo('selected="true"');}?>>MSCHAPV2</option>
+                            <option <?php if($network['secondphase'] == "MD5"){echo('selected="true"');}?>>MD5</option>
+                          </select>
+                        </div>
+                      </div>
+                      <div class="form-group">
+                        <div class="input-group col-xs-12 col-md-12">
+                          <span class="input-group-addon" id="username">Username</span>
+                          <input type="text" class="form-control" aria-describedby="username" name="username<?php echo $index ?>" value="<?php echo $network['username'] ?>" style="background-image: url(&quot;data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAACIUlEQVQ4EX2TOYhTURSG87IMihDsjGghBhFBmHFDHLWwSqcikk4RRKJgk0KL7C8bMpWpZtIqNkEUl1ZCgs0wOo0SxiLMDApWlgOPrH7/5b2QkYwX7jvn/uc//zl3edZ4PPbNGvF4fC4ajR5VrNvt/mo0Gr1ZPOtfgWw2e9Lv9+chX7cs64CS4Oxg3o9GI7tUKv0Q5o1dAiTfCgQCLwnOkfQOu+oSLyJ2A783HA7vIPLGxX0TgVwud4HKn0nc7Pf7N6vV6oZHkkX8FPG3uMfgXC0Wi2vCg/poUKGGcagQI3k7k8mcp5slcGswGDwpl8tfwGJg3xB6Dvey8vz6oH4C3iXcFYjbwiDeo1KafafkC3NjK7iL5ESFGQEUF7Sg+ifZdDp9GnMF/KGmfBdT2HCwZ7TwtrBPC7rQaav6Iv48rqZwg+F+p8hOMBj0IbxfMdMBrW5pAVGV/ztINByENkU0t5BIJEKRSOQ3Aj+Z57iFs1R5NK3EQS6HQqF1zmQdzpFWq3W42WwOTAf1er1PF2USFlC+qxMvFAr3HcexWX+QX6lUvsKpkTyPSEXJkw6MQ4S38Ljdbi8rmM/nY+CvgNcQqdH6U/xrYK9t244jZv6ByUOSiDdIfgBZ12U6dHEHu9TpdIr8F0OP692CtzaW/a6y3y0Wx5kbFHvGuXzkgf0xhKnPzA4UTyaTB8Ph8AvcHi3fnsrZ7Wore02YViqVOrRXXPhfqP8j6MYlawoAAAAASUVORK5CYII=&quot;); background-repeat: no-repeat; background-attachment: scroll; background-size: 16px 18px; background-position: 98% 50%; cursor: auto;">
+                        </div>
+                      </div>
+                    <?php } ?>
                   <div class="form-group">
                     <div class="input-group col-xs-12 col-md-12">
                       <span class="input-group-addon" id="passphrase">Passphrase</span>
@@ -265,6 +339,13 @@ function DisplayWPAConfig()
                             <button class="btn btn-default" onclick="showPassword(<?php echo $index; ?>)" type="button">Show</button>
                           </span>
                         <?php } ?>
+                    </div>
+                  </div>
+
+                  <div class="form-group">
+                    <div class="input-group col-xs-12 col-md-12">
+                      <span class="input-group-addon" id="priority">Priority</span>
+                          <input type="number" min="0" max="255" class="form-control" aria-describedby="priority" name="priority<?php echo $index ?>" value="<?php if(array_key_exists('priority' . $network)){echo($network['passphrase']);}else{echo("0");}?>" />
                     </div>
                   </div>
 

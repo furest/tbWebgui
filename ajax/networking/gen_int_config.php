@@ -15,6 +15,9 @@ if(isset($_POST['generate']) && isset($_POST['csrf_token']) && CSRFValidate()) {
                 $strConfFile .= "static ip_address=".$cnfFile['ip_address']."\n";
                 $strConfFile .= "static routers=".$cnfFile['routers']."\n";
                 $strConfFile .= "static domain_name_servers=".$cnfFile['domain_name_server']."\n";
+                if($confFile['nohookWPASupplicant'] === 'true'){
+                    $strConfFile .= "nohook wpa_supplicant"."\n";
+                }
             } elseif($cnfFile['static'] === 'false' && $cnfFile['failover'] === 'true') {
                 $strConfFile .= "profile static_".$cnfFile['interface']."\n";
                 $strConfFile .= "static ip_address=".$cnfFile['ip_address']."\n";
