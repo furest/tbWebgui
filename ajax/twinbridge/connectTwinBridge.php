@@ -5,9 +5,10 @@
     if(isset($_POST['username']) && isset($_POST['password']) && CSRFValidate()){
         $username = $_POST['username'];
         $password = $_POST['password'];
-
-        $ret = shell_exec('LOGIN="'.$username.'" PASSWORD="'.$password.'" sudo -E /usr/bin/python3 '.TWINBRIDGE_DIR.'/connectScript/phpConnect.py 2>&1 &');
-        echo $ret;
+        $output = null;
+        $command = 'LOGIN="'.$username.'" PASSWORD="'.$password.'" sudo -E '.TWINBRIDGE_DIR.'/connectScript/phpConnect.py 2>&1';
+        $output = shell_exec($command);
+        echo($output);
     } else {
             echo '"error":true, "reason":"Incorrect parameters"';
     }

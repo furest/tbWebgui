@@ -7,7 +7,7 @@
         $cfg = [];
         $file = $int.".ini";
         $ip = $_POST[$int.'-ipaddress'];
-        $netmask = mask2cidr($_POST[$int.'-netmask']);
+        $netmask = ($_POST[$int.'-netmask'] == "" )? "" : mask2cidr($_POST[$int.'-netmask']);
         $dns1 = $_POST[$int.'-dnssvr'];
         $dns2 = $_POST[$int.'-dnssvralt'];
 

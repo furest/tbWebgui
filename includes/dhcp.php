@@ -16,13 +16,6 @@ function DisplayDHCPConfig()
             $errors = '';
             define('IFNAMSIZ', 16);
 
-
-            /*if (!preg_match('/^[a-zA-Z0-9]+$/', $_POST['interface']) ||
-            strlen($_POST['interface']) >= IFNAMSIZ) {
-                  $errors .= _('Invalid interface name.').'<br />'.PHP_EOL;
-            }*/
-
-
             if (!preg_match('/^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\z/', $_POST['RangeStart']) &&
             !empty($_POST['RangeStart'])) {  // allow ''/null ?
                   $errors .= _('Invalid DHCP range start.').'<br />'.PHP_EOL;
@@ -53,6 +46,19 @@ function DisplayDHCPConfig()
                 $config .= $_POST['RangeLeaseTimeUnits'];
                 exec('echo "'.$config.'" > /tmp/dnsmasqdata', $temp);
                 system('sudo cp /tmp/dnsmasqdata '.RASPI_DNSMASQ_CONFIG, $return);
+
+
+                $hotspotConfig = parse_ini_file(RASPI_CONFIG_NETWORKING.'/'.RASPI_WIFI_HOTSPOT_INTERFACE.'.ini');
+                $networkSettings = explode('/', $hotspotConfig['ip_address']);
+                $ip = $_POST['RangeStart'];
+                $cidr = $networkSettings[1];
+                $mask = cidr2mask($cidr);
+
+                $intIp = ip2long($ip);
+                $intMask = ip2long($mask);
+                $firstIp = ($intIp & $intMask)+1;
+                $hotspotConfig['ip_address'] = long2ip($firstIp).'/'.$cidr;
+                write_php_ini($hotspotConfig,RASPI_CONFIG_NETWORKING.'/'.RASPI_WIFI_HOTSPOT_INTERFACE.'.ini');
             } else {
                 $status->addMessage($errors, 'danger');
             }

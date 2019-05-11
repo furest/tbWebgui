@@ -3,12 +3,7 @@
     include("../../includes/config.php");
     include("../../includes/functions.php");
 
-    if(!isset($_SESSION['client_ip']) || !isset($_SESSION['mask']) || !CSRFValidate()) {
-        if(!CSRFValidate())
-        {
-            echo('{"error":true, "reason":"CSRF Error"}');
-            die();    
-        }
+    if(!isset($_SESSION['client_ip']) || !isset($_SESSION['mask'])) {
         echo('{"error":true, "reason":"Invalid parameters"}');
         die();
     }
@@ -19,6 +14,7 @@
 
     $srvIP = long2ip($intNetId+1);
 
+
     $errno=0;
     $errmsg="";
     $fsock = fsockopen($srvIP, 1500, $errno, $errmsg);
@@ -26,12 +22,12 @@
         echo('{"error":true, "reason":"'.$errmsg.'"}');
         die();
     }
-    $reqListString = '{"type":"create", "invited_id":'. $_POST['id'] .'}'.PHP_EOL;
+    $reqListString = '{"type":"status"}'.PHP_EOL;
     fwrite($fsock, $reqListString);
     $response = fgets($fsock);
-
     $jsonResponse = json_decode($response, true);
     if($jsonResponse == NULL){
         echo('{"error":true, "reason":"Response is not JSON"}');
+        die();
     }
     echo($response);

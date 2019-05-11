@@ -27,23 +27,26 @@
     $response = fgets($fsock);
     $jsonResponse = json_decode($response, true);
     if($jsonResponse == NULL){
-        echo('{"error":true, "reason":"Response is not JSON", "response":"'. $srvIP .'"}');
+        echo('{"error":true, "reason":"Response is not JSON"}');
         die();
     }
     $form = '<p>';
     $form .= '<h4>'._("Invite an academy to join your lab").'</h4>';
+    $form .= '<div class="btn-group btn-block">';
+    $form .= '<a href="#" style="padding:10px;float: right;display: block;position: relative;margin-top: -55px;" class="col-md-2 btn btn-danger" id="kill" onclick="killVPN()" csrf="'.htmlspecialchars($_SESSION['csrf_token'], ENT_QUOTES).'">Disconnect</a>';
+    $form .= '</div>';
     $form .= '<form id="twiningsList">';
     $form .= '<input id="csrf_token" type="hidden" name="csrf_token" value="'.htmlspecialchars($_SESSION['csrf_token'], ENT_QUOTES).'"/>';
     $twinings = $jsonResponse['response'];
     foreach($twinings as $twining){
         $form .= '<div class="row form-group" align="center">';
-        $form .= '<a href="#" class="btn btn-lg btn-info btn-block" onclick="invite('.$twining['academy_id'].')">'.$twining['login'].' ('.$twining['email'].')</a>';
+        $form .= '<a href="#" class="btn academy btn-lg btn-info btn-block" onclick="invite('.$twining['academy_id'].')">'.$twining['login'].' ('.$twining['email'].')</a>';
         $form .= '</div>';
         //$form .= '</p>';
     }
     $form .= '</form>';
     $form .='<style>
-                .btn-block{
+                .academy{
                     width: 70%;
                 }
             </style>';

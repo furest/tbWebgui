@@ -11,18 +11,65 @@ function showTbStatus(){
                 case "connecting":
                 case "configuring":
                 {
-                    $("#twinBridgeContent").html('<h4>Connection in progress</h4><img src="/img/loading.svg">');
+                    displayLoading();
                     break;
                 }
                 case "connected":
                 {
-                    //TODO : show list of twined academies. Add disconnect button. Handle errors. Maybe prevent concurrency? 
-                    //Maybe detect if vxlan is setup?
-                    displayActionForm(jsonData.ip, jsonData.mask);
+
+                    $.get('/ajax/twinbridge/getStatus.php', function(data){
+                        jsonData = JSON.parse(data)
+                        if(jsonData.error != false){
+                            alert("error : " + jsonData.reason);
+                            return;
+                        }
+                        switch(jsonData.response.status){
+                            case "free":
+                                displayActionForm();
+                                break;
+                            case "hosting":
+                            case "invited":
+                                showLab(jsonData.response.status, jsonData.response.lab);
+                        }
+                    })
+                    
                     break;
                 }
             }
         }
+    });
+}
+
+function showLab(status, lab){
+    var params = {};
+    params['status'] = status;
+    params['lab'] = lab;
+    $.post('/ajax/twinbridge/showLab.php', params, function(data){
+        jsonData = JSON.parse(data);
+        if(jsonData.error != false){
+            alert("error : " + jsonData.reason);
+            return;
+        }
+        $("#twinBridgeContent").html(jsonData.response);
+    })
+}
+
+function displayLoading(){
+    $.get('/ajax/twinbridge/showLoading.php', function(form){
+        $("#twinBridgeContent").html(form);
+    });
+}
+
+function killVPN(){
+    var csrf = $('#kill').attr("csrf");
+    var params = {};
+    params['csrf_token'] = csrf;
+    $.post('/ajax/twinbridge/killVPN.php', params, function(data){
+        jsonData = JSON.parse(data);
+        if(jsonData.error != false){
+            alert("error : " + jsonData.reason);
+        }
+        showTbStatus();
     });
 }
 
@@ -36,12 +83,12 @@ function invite(id){
     });
     formAttr['id'] = id;
     $.post('/ajax/twinbridge/invite.php', formAttr, function(data){
-        jsonData = JSON.parse(data)
+        jsonData = JSON.parse(data);
         if(jsonData.error != false){
             alert("error : " + jsonData.reason);
             return;
         }
-        alert('lab created!');
+        showTbStatus();
         
     });
 }
@@ -54,7 +101,7 @@ function listAcademies(){
         }
     });
     $.post('/ajax/twinbridge/listAcademies.php', formAttr, function(data){
-        jsonData = JSON.parse(data)
+        jsonData = JSON.parse(data);
         if(jsonData.error != false){
             alert("error : " + jsonData.reason);
             return;
@@ -80,12 +127,35 @@ function displayActionForm(){
             listAcademies();
         });
         $("#joinBtn").click(function(){
-            joinLab();
+            displayJoinForm();
         });
     });
 
 }
 
+function displayJoinForm(){
+    $.get('/ajax/twinbridge/joinLabForm.php', function(form){
+        $("#twinBridgeContent").html(form);
+    });
+}
+
+function joinLab(){
+    var form = $("#joinForm").find(":input");
+    var params = {};
+    $.each(form, function(k, v){
+        if($(v).attr("name") == "pin" || $(v).attr("name") == "csrf_token"){
+            params[$(v).attr("name")] = $(v).val();
+        }
+    });
+    $.post('/ajax/twinbridge/joinLab.php', params, function(data){
+        jsonData = JSON.parse(data)
+        if(jsonData.error != false){
+            alert("error : " + jsonData.reason);
+            return;
+        }
+        showTbStatus();
+    });
+}
 function connectTwinBridge(){
     var form = $("#connectionForm").find(":input");
     var logins = {};
@@ -94,14 +164,15 @@ function connectTwinBridge(){
             logins[$(v).attr("name")] = $(v).val();
         }
     });
+    displayLoading();
     $.post('/ajax/twinbridge/connectTwinBridge.php', logins, function(data){
-        jsonData = JSON.parse(data);
+        jsonData = JSON.parse(data)
         if(jsonData.error != false){
-            alert("An error occurred!")
+            alert("error : " + jsonData.reason);
+            return;
         }
         showTbStatus();
     });
-    $("#twinBridgeContent").html('<h4>Connection in progress</h4><img src="/img/loading.svg">');
 
 }
 
