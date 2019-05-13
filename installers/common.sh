@@ -357,6 +357,13 @@ function install_complete() {
     fi
 }
 
+function install_tbclient(){
+    install_log "Installing tbClient"
+    sudo mkdir /etc/tbClient
+    git clone https://github.com/furest/tbClient /etc/tbClient
+    sudo /etc/tbClient/setup.sh
+}
+
 function install_raspap() {
     display_welcome
     config_installation
