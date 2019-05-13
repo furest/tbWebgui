@@ -6,7 +6,7 @@
         $username = $_POST['username'];
         $password = $_POST['password'];
         $output = null;
-        $command = 'LOGIN="'.$username.'" PASSWORD="'.$password.'" sudo -E '.TWINBRIDGE_DIR.'/connectScript/phpConnect.py 2>&1';
+        $command = 'LOGIN="'.$username.'" PASSWORD="'.$password.'" sudo -E '.TWINBRIDGE_DIR.'/bin/phpConnect.py 2>&1';
         $output = shell_exec($command);
         echo($output);
     } else {

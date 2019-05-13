@@ -7,6 +7,6 @@
         echo('{"error":true, "reason":"CSRF Error"}');
         die();    
     } 
-    $command = "sudo ".TWINBRIDGE_DIR."/flush.sh";
+    $command = "sudo ".TWINBRIDGE_DIR."/bin/flush.sh";
     shell_exec($command);
     echo('{"error":false}');
