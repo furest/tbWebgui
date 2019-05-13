@@ -159,7 +159,7 @@ function DisplayWPAConfig()
             }
 
             if ($ok) {
-                system('sudo cp /tmp/wifidata ' . RASPI_WPA_SUPPLICANT_CONFIG.'.test', $returnval);
+                system('sudo cp /tmp/wifidata ' . RASPI_WPA_SUPPLICANT_CONFIG, $returnval);
                 if ($returnval == 0) {
                     exec('sudo wpa_cli -i ' . RASPI_WIFI_CLIENT_INTERFACE . ' reconfigure', $reconfigure_out, $reconfigure_return);
                     if ($reconfigure_return == 0) {
