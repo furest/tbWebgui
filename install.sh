@@ -285,7 +285,6 @@ function patch_system_files() {
         "/bin/cat /etc/dhcpcd.conf"
         "/bin/cat /etc/wpa_supplicant/wpa_supplicant-wlan[0-9].conf"
         "/bin/cp /tmp/wifidata /etc/wpa_supplicant/wpa_supplicant.conf"
-        "/bin/cp /tmp/wifidata /etc/wpa_supplicant/wpa_supplicant.conf.test"
         "/bin/cp /tmp/wifidata /etc/wpa_supplicant/wpa_supplicant-wlan[0-9].conf"
         "/sbin/wpa_cli -i wlan[0-9] scan_results"
         "/sbin/wpa_cli -i wlan[0-9] scan"
@@ -313,7 +312,7 @@ function patch_system_files() {
     )
 
     # Check if sudoers needs patching
-    if [ $(sudo grep -c www-data /etc/sudoers) -ne 31 ]
+    if [ $(sudo grep -c www-data /etc/sudoers) -ne 30 ]
     then
         # Sudoers file has incorrect number of commands. Wiping them out.
         install_log "Cleaning sudoers file"
