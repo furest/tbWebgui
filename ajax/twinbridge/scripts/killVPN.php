@@ -1,7 +1,7 @@
 <?php
     session_start();
-    include("../../includes/config.php");
-    include("../../includes/functions.php");
+    include("../../../includes/config.php");
+    include("../../../includes/functions.php");
 
     if(!CSRFValidate()) {
         echo('{"error":true, "reason":"CSRF Error"}');

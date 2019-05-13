@@ -41,6 +41,16 @@ function DisplayHostAPDConfig()
         } else {
             error_log('CSRF violation');
         }
+    } elseif (isset($_POST['RestartHotspot'])) {
+      if (CSRFValidate()) {
+          $status->addMessage('Attempting to restart hotspot', 'info');
+          exec('sudo /etc/init.d/hostapd restart', $return);
+          foreach ($return as $line) {
+              $status->addMessage($line, 'info');
+          }
+      } else {
+          error_log('CSRF violation');
+      }
     }
 
     exec('cat '. RASPI_HOSTAPD_CONFIG, $hostapdconfig);
@@ -444,6 +454,7 @@ if ($arrConfig['ignore_broadcast_ssid'] == 1 || $arrConfig['ignore_broadcast_ssi
                 echo '<input type="submit" class="btn btn-success" name="StartHotspot" value="' . _("Start hotspot") . '"/>' , PHP_EOL;
             } else {
                 echo '<input type="submit" class="btn btn-warning" name="StopHotspot" value="' . _("Stop hotspot") . '"/>' , PHP_EOL;
+                echo '<input type="submit" class="btn btn-danger" name="RestartHotspot" value="' . _("Restart hotspot") . '"/>' , PHP_EOL;
             };
 ?>
           </form>

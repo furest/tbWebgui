@@ -1,7 +1,7 @@
 <?php
     session_start();
-    include("../../includes/config.php");
-    include("../../includes/functions.php");
+    include("../../../includes/config.php");
+    include("../../../includes/functions.php");
 ?>
     <p></p>
     <h4>Create or join lab</h4>
@@ -15,7 +15,7 @@
               <span class="input-group-addon" id="pin">PIN code</span>
                   <input type="number" class="form-control" id="pin" name="pin">
                   <span class="input-group-btn">
-                    	<button class="btn btn-default" onclick="joinLab()" type="button">Join</button>
+                    	<button class="btn btn-default" id="join" type="button">Join</button>
                   </span>
             	</div>
         </div>  

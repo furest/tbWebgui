@@ -1,9 +1,9 @@
 <?php
     session_start();
-    include("../../includes/config.php");
-    include("../../includes/functions.php");
+    include("../../../includes/config.php");
+    include("../../../includes/functions.php");
 
-    if(!isset($_SESSION['client_ip']) || !isset($_SESSION['mask']) || !CSRFValidate()) {
+    if(!isset($_SESSION['client_ip']) || !isset($_SESSION['mask'])  || !isset($_POST['pin']) || !CSRFValidate()) {
         if(!CSRFValidate())
         {
             echo('{"error":true, "reason":"CSRF Error"}');
@@ -26,7 +26,7 @@
         echo('{"error":true, "reason":"'.$errmsg.'"}');
         die();
     }
-    $reqListString = '{"type":"create", "invited_id":'. $_POST['id'] .'}'.PHP_EOL;
+    $reqListString = '{"type":"join", "pin":"'. $_POST['pin'] .'"}'.PHP_EOL;
     fwrite($fsock, $reqListString);
     $response = fgets($fsock);
 
@@ -34,4 +34,4 @@
     if($jsonResponse == NULL){
         echo('{"error":true, "reason":"Response is not JSON"}');
     }
-    echo($response);
+    echo($response); 

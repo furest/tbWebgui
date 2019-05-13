@@ -49,6 +49,7 @@ if(isset($_POST['generate']) && isset($_POST['csrf_token']) && CSRFValidate()) {
 
     if(file_put_contents('/tmp/dhcpcddata',$strConfFile)) {
         exec('sudo /bin/cp /tmp/dhcpcddata /etc/dhcpcd.conf');
+        shell_exec('sudo /etc/raspap/hostapd/servicestart.sh');
         $output = ['return'=>0,'output'=>'Settings successfully applied'];
     } else {
         $output = ['return'=>2,'output'=>'Unable to write to apply settings'];

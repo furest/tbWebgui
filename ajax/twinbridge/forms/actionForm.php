@@ -1,7 +1,7 @@
 <?php
     session_start();
-    include("../../includes/config.php");
-    include("../../includes/functions.php");
+    include("../../../includes/config.php");
+    include("../../../includes/functions.php");
 ?>
     <p></p>
     <h4> <?php echo _("Create or join lab");?> </h4>

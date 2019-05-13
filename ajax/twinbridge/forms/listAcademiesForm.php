@@ -1,7 +1,7 @@
 <?php
     session_start();
-    include("../../includes/config.php");
-    include("../../includes/functions.php");
+    include("../../../includes/config.php");
+    include("../../../includes/functions.php");
 
     if(!isset($_SESSION['client_ip']) || !isset($_SESSION['mask']) || !CSRFValidate()) {
         echo('{"error":true, "reason":"Invalid parameters"}');

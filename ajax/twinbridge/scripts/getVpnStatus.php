@@ -1,5 +1,5 @@
 <?php
-include("../../includes/config.php") ;
+include("../../../includes/config.php") ;
 $pidfile = TWINBRIDGE_DIR."/openvpn.pid";
 if(file_exists($pidfile)){
     $openvpnPID = file_get_contents($pidfile);

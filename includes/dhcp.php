@@ -36,18 +36,6 @@ function DisplayDHCPConfig()
 
             $return = 1;
             if (empty($errors)) {
-                $config = 'interface='.RASPI_WIFI_HOTSPOT_INTERFACE.PHP_EOL.
-                      'dhcp-range='.$_POST['RangeStart'].','.$_POST['RangeEnd'].
-                      ',255.255.255.0,';
-                if ($_POST['RangeLeaseTimeUnits'] !== 'infinite') {
-                    $config .= $_POST['RangeLeaseTime'];
-                }
-
-                $config .= $_POST['RangeLeaseTimeUnits'];
-                exec('echo "'.$config.'" > /tmp/dnsmasqdata', $temp);
-                system('sudo cp /tmp/dnsmasqdata '.RASPI_DNSMASQ_CONFIG, $return);
-
-
                 $hotspotConfig = parse_ini_file(RASPI_CONFIG_NETWORKING.'/'.RASPI_WIFI_HOTSPOT_INTERFACE.'.ini');
                 $networkSettings = explode('/', $hotspotConfig['ip_address']);
                 $ip = $_POST['RangeStart'];
@@ -59,6 +47,21 @@ function DisplayDHCPConfig()
                 $firstIp = ($intIp & $intMask)+1;
                 $hotspotConfig['ip_address'] = long2ip($firstIp).'/'.$cidr;
                 write_php_ini($hotspotConfig,RASPI_CONFIG_NETWORKING.'/'.RASPI_WIFI_HOTSPOT_INTERFACE.'.ini');
+                
+                $config = 'interface='.RASPI_WIFI_HOTSPOT_INTERFACE.PHP_EOL.
+                      'dhcp-range='.long2ip($firstIp+1).','.$_POST['RangeEnd'].
+                      ',255.255.255.0,';
+                if ($_POST['RangeLeaseTimeUnits'] !== 'infinite') {
+                    $config .= $_POST['RangeLeaseTime'];
+                }
+
+                $config .= $_POST['RangeLeaseTimeUnits'];
+                exec('echo "'.$config.'" > /tmp/dnsmasqdata', $temp);
+                system('sudo cp /tmp/dnsmasqdata '.RASPI_DNSMASQ_CONFIG, $return);
+                shell_exec('sudo /etc/raspap/hostapd/servicestart.sh');
+
+
+                
             } else {
                 $status->addMessage($errors, 'danger');
             }

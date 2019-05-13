@@ -1,7 +1,7 @@
 <?php
     session_start();
-    include("../../includes/config.php");
-    include("../../includes/functions.php");
+    include("../../../includes/config.php");
+    include("../../../includes/functions.php");
 ?>
 </p>
 <h4> <?php echo _("Connection");?></h4>
