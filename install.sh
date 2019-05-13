@@ -86,6 +86,42 @@ function install_dependencies() {
     install_error "No function definition for install_dependencies"
 }
 
+# Optimize configuration of php-cgi.
+function optimize_php() {
+    install_log "Optimize PHP configuration"
+    if [ ! -f "$phpcgiconf" ]; then
+        install_warning "PHP configuration could not be found."
+        return
+    fi
+
+    # Backup php.ini and create symlink for restoring.
+    datetimephpconf=$(date +%F-%R)
+    sudo cp "$phpcgiconf" "$raspap_dir/backups/php.ini.$datetimephpconf"
+    sudo ln -sf "$raspap_dir/backups/php.ini.$datetimephpconf" "$raspap_dir/backups/php.ini"
+
+    echo -n "Enable HttpOnly for session cookies (Recommended)? [Y/n]: "
+    read answer
+    if [ "$answer" != 'n' ] && [ "$answer" != 'N' ]; then
+        echo "Php-cgi enabling session.cookie_httponly."
+        sudo sed -i -E 's/^session\.cookie_httponly\s*=\s*(0|([O|o]ff)|([F|f]alse)|([N|n]o))\s*$/session.cookie_httponly = 1/' "$phpcgiconf"
+    fi
+
+    if [ "$php_package" = "php7.0-cgi" ]; then
+        echo -n "Enable PHP OPCache (Recommended)? [Y/n]: "
+        read answer
+        if [ "$answer" != 'n' ] && [ "$answer" != 'N' ]; then
+            echo "Php-cgi enabling opcache.enable."
+            sudo sed -i -E 's/^;?opcache\.enable\s*=\s*(0|([O|o]ff)|([F|f]alse)|([N|n]o))\s*$/opcache.enable = 1/' "$phpcgiconf"
+            # Make sure opcache extension is turned on.
+            if [ -f "/usr/sbin/phpenmod" ]; then
+                sudo phpenmod opcache
+            else
+                install_warning "phpenmod not found."
+            fi
+        fi
+    fi
+}
+
 # Enables PHP for lighttpd and restarts service for settings to take effect
 function enable_php_lighttpd() {
     install_log "Enabling PHP for lighttpd"
@@ -108,54 +144,8 @@ function create_raspap_directories() {
 
     # Create a directory to store networking configs
     sudo mkdir -p "$raspap_dir/networking"
-    # Copy existing dhcpcd.conf to use as base 
-    #YANNICK: replace with the provided defaults file
-    #cat /etc/dhcpcd.conf | sudo tee -a /etc/raspap/networking/defaults
-    sudo cp "$webroot_dir/config/defaults" "/etc/raspap/networking/defaults"
-    sudo cp "$webroot_dir/config/wlan0.ini" "/etc/raspap/networking/wlan0.ini"
-    
 
     sudo chown -R $raspap_user:$raspap_user "$raspap_dir" || install_error "Unable to change file ownership for '$raspap_dir'"
-}
-
-# Generate hostapd logging and service control scripts
-function create_hostapd_scripts() {
-    install_log "Creating hostapd logging & control scripts"
-    sudo mkdir $raspap_dir/hostapd || install_error "Unable to create directory '$raspap_dir/hostapd'"
-
-    # Move logging shell scripts 
-    sudo mv "$webroot_dir/installers/"*log.sh "$raspap_dir/hostapd" || install_error "Unable to move logging scripts"
-    # Move service control shell scripts
-    sudo mv "$webroot_dir/installers/"service*.sh "$raspap_dir/hostapd" || install_error "Unable to move service control scripts"
-    # Make enablelog.sh and disablelog.sh not writable by www-data group.
-    sudo chown -c root:"$raspap_user" "$raspap_dir/hostapd/"*.sh || install_error "Unable change owner and/or group."
-    sudo chmod 750 "$raspap_dir/hostapd/"*.sh || install_error "Unable to change file permissions."
-}
-
-
-# Fetches latest files from github to webroot
-function download_latest_files() {
-    if [ -d "$webroot_dir" ]; then
-        sudo mv $webroot_dir "$webroot_dir.`date +%F-%R`" || install_error "Unable to remove old webroot directory"
-    fi
-
-    install_log "Cloning latest files from github"
-    git clone --depth 1 https://github.com/furest/tbWebgui /tmp/raspap-webgui || install_error "Unable to download files from github"
-    sudo mv /tmp/raspap-webgui $webroot_dir || install_error "Unable to move raspap-webgui to web root"
-
-    # Move icons to webroot
-    #echo -n "Installing high-res favicons"
-    #sudo mv $webroot_dir/dist/icons/* $webroot_dir || install_error "Unable to move icons to web root"
-}
-
-# Sets files ownership in web root directory
-function change_file_ownership() {
-    if [ ! -d "$webroot_dir" ]; then
-        install_error "Web root directory doesn't exist"
-    fi
-
-    install_log "Changing file ownership in web root directory"
-    sudo chown -R $raspap_user:$raspap_user "$webroot_dir" || install_error "Unable to change file ownership for '$webroot_dir'"
 }
 
 # Check for existing /etc/network/interfaces and /etc/hostapd/hostapd.conf files
@@ -186,6 +176,46 @@ function check_for_old_configs() {
     fi
 }
 
+# Fetches latest files from github to webroot
+function download_latest_files() {
+    if [ -d "$webroot_dir" ]; then
+        sudo mv $webroot_dir "$webroot_dir.`date +%F-%R`" || install_error "Unable to remove old webroot directory"
+    fi
+
+    install_log "Cloning latest files from github"
+    git clone --depth 1 https://github.com/furest/tbWebgui /tmp/raspap-webgui || install_error "Unable to download files from github"
+    sudo mv /tmp/raspap-webgui $webroot_dir || install_error "Unable to move raspap-webgui to web root"
+
+    # Move icons to webroot
+    #echo -n "Installing high-res favicons"
+    #sudo mv $webroot_dir/dist/icons/* $webroot_dir || install_error "Unable to move icons to web root"
+}
+
+# Sets files ownership in web root directory
+function change_file_ownership() {
+    if [ ! -d "$webroot_dir" ]; then
+        install_error "Web root directory doesn't exist"
+    fi
+
+    install_log "Changing file ownership in web root directory"
+    sudo chown -R $raspap_user:$raspap_user "$webroot_dir" || install_error "Unable to change file ownership for '$webroot_dir'"
+}
+# Generate hostapd logging and service control scripts
+function create_hostapd_scripts() {
+    install_log "Creating hostapd logging & control scripts"
+    sudo mkdir $raspap_dir/hostapd || install_error "Unable to create directory '$raspap_dir/hostapd'"
+
+    # Move logging shell scripts 
+    sudo mv "$webroot_dir/installers/"*log.sh "$raspap_dir/hostapd" || install_error "Unable to move logging scripts"
+    # Move service control shell scripts
+    sudo mv "$webroot_dir/installers/"service*.sh "$raspap_dir/hostapd" || install_error "Unable to move service control scripts"
+    # Make enablelog.sh and disablelog.sh not writable by www-data group.
+    sudo chown -c root:"$raspap_user" "$raspap_dir/hostapd/"*.sh || install_error "Unable change owner and/or group."
+    sudo chmod 750 "$raspap_dir/hostapd/"*.sh || install_error "Unable to change file permissions."
+}
+
+
+
 # Move configuration file to the correct location
 function move_config_file() {
     if [ ! -d "$raspap_dir" ]; then
@@ -206,7 +236,8 @@ function default_configuration() {
     sudo mv $webroot_dir/config/default_hostapd /etc/default/hostapd || install_error "Unable to move hostapd defaults file"
     sudo mv $webroot_dir/config/hostapd.conf /etc/hostapd/hostapd.conf || install_error "Unable to move hostapd configuration file"
     sudo mv $webroot_dir/config/dnsmasq.conf /etc/dnsmasq.conf || install_error "Unable to move dnsmasq configuration file"
-    #sudo mv $webroot_dir/config/dhcpcd.conf /etc/dhcpcd.conf || install_error "Unable to move dhcpcd configuration file"
+    sudo mv $webroot_dir/config/defaults $raspap_dir/networking/defaults || install_error "Unable to move default networking configuration file"
+    sudo mv $webroot_dir/config/wlan0.ini $raspap_dir/networking/wlan0.ini || install_error "Unable to move wlan0 configuration file"
 
     # Generate required lines for Rasp AP to place into rc.local file.
     # #RASPAP is for removal script
@@ -228,8 +259,10 @@ function default_configuration() {
     sudo systemctl restart rc-local.service
     sudo systemctl daemon-reload
 
-    sudo systemctl enable hostapd
-    sudo systemctl enable dnsmasq
+    # Unmask and enable hostapd.service
+    sudo systemctl unmask hostapd.service
+    sudo systemctl enable hostapd.service
+    sudo systemctl enable dnsmasq.service
 }
 
 # Add a single entry to the sudoers file
@@ -294,47 +327,14 @@ function patch_system_files() {
     else
         install_log "Sudoers file already patched"
     fi
-
-    # Unmask and enable hostapd.service
-    sudo systemctl unmask hostapd.service
-    sudo systemctl enable hostapd.service
 }
 
 
-# Optimize configuration of php-cgi.
-function optimize_php() {
-    install_log "Optimize PHP configuration"
-    if [ ! -f "$phpcgiconf" ]; then
-        install_warning "PHP configuration could not be found."
-        return
-    fi
-
-    # Backup php.ini and create symlink for restoring.
-    datetimephpconf=$(date +%F-%R)
-    sudo cp "$phpcgiconf" "$raspap_dir/backups/php.ini.$datetimephpconf"
-    sudo ln -sf "$raspap_dir/backups/php.ini.$datetimephpconf" "$raspap_dir/backups/php.ini"
-
-    echo -n "Enable HttpOnly for session cookies (Recommended)? [Y/n]: "
-    read answer
-    if [ "$answer" != 'n' ] && [ "$answer" != 'N' ]; then
-        echo "Php-cgi enabling session.cookie_httponly."
-        sudo sed -i -E 's/^session\.cookie_httponly\s*=\s*(0|([O|o]ff)|([F|f]alse)|([N|n]o))\s*$/session.cookie_httponly = 1/' "$phpcgiconf"
-    fi
-
-    if [ "$php_package" = "php7.0-cgi" ]; then
-        echo -n "Enable PHP OPCache (Recommended)? [Y/n]: "
-        read answer
-        if [ "$answer" != 'n' ] && [ "$answer" != 'N' ]; then
-            echo "Php-cgi enabling opcache.enable."
-            sudo sed -i -E 's/^;?opcache\.enable\s*=\s*(0|([O|o]ff)|([F|f]alse)|([N|n]o))\s*$/opcache.enable = 1/' "$phpcgiconf"
-            # Make sure opcache extension is turned on.
-            if [ -f "/usr/sbin/phpenmod" ]; then
-                sudo phpenmod opcache
-            else
-                install_warning "phpenmod not found."
-            fi
-        fi
-    fi
+function install_tbclient(){
+    install_log "Installing tbClient"
+    sudo mkdir /etc/tbClient
+    git clone https://github.com/furest/tbClient /etc/tbClient
+    sudo /etc/tbClient/setup.sh
 }
 
 function install_complete() {
@@ -353,12 +353,6 @@ function install_complete() {
     fi
 }
 
-function install_tbclient(){
-    install_log "Installing tbClient"
-    sudo mkdir /etc/tbClient
-    git clone https://github.com/furest/tbClient /etc/tbClient
-    sudo /etc/tbClient/setup.sh
-}
 
 function install_raspap() {
     display_welcome
