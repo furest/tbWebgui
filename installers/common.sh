@@ -108,8 +108,12 @@ function create_raspap_directories() {
 
     # Create a directory to store networking configs
     sudo mkdir -p "$raspap_dir/networking"
-    # Copy existing dhcpcd.conf to use as base config
-    cat /etc/dhcpcd.conf | sudo tee -a /etc/raspap/networking/defaults
+    # Copy existing dhcpcd.conf to use as base 
+    #YANNICK: replace with the provided defaults file
+    #cat /etc/dhcpcd.conf | sudo tee -a /etc/raspap/networking/defaults
+    sudo cp "$webroot_dir/config/defaults" "/etc/raspap/networking/defaults"
+    sudo cp "$webroot_dir/config/wlan0.ini" "/etc/raspap/networking/wlan0.ini"
+    
 
     sudo chown -R $raspap_user:$raspap_user "$raspap_dir" || install_error "Unable to change file ownership for '$raspap_dir'"
 }
@@ -136,7 +140,7 @@ function download_latest_files() {
     fi
 
     install_log "Cloning latest files from github"
-    git clone --depth 1 https://github.com/billz/raspap-webgui /tmp/raspap-webgui || install_error "Unable to download files from github"
+    git clone --depth 1 https://github.com/furest/tbWebgui /tmp/raspap-webgui || install_error "Unable to download files from github"
     sudo mv /tmp/raspap-webgui $webroot_dir || install_error "Unable to move raspap-webgui to web root"
 
     # Move icons to webroot
@@ -209,7 +213,7 @@ function default_configuration() {
     lines=(
     'echo 1 > \/proc\/sys\/net\/ipv4\/ip_forward #RASPAP'
     'iptables -t nat -A POSTROUTING -j MASQUERADE #RASPAP'
-    'iptables -t nat -A POSTROUTING -s 192.168.50.0\/24 ! -d 192.168.50.0\/24 -j MASQUERADE #RASPAP'
+    #'iptables -t nat -A POSTROUTING -s 192.168.50.0\/24 ! -d 192.168.50.0\/24 -j MASQUERADE #RASPAP'
     )
     
     for line in "${lines[@]}"; do
@@ -225,14 +229,11 @@ function default_configuration() {
     sudo systemctl restart rc-local.service
     sudo systemctl daemon-reload
 
-    # Install and enable RaspAP daemon
-    echo -n "Enable RaspAP control service (Recommended)? [Y/n]: "
-    read answer
-    if [ "$answer" != 'n' ] && [ "$answer" != 'N' ]; then
-        echo -n "Enabling RaspAP daemon. Disable with: sudo systemctl disable raspap.service"
-        sudo mv $webroot_dir/installers/raspap.service /lib/systemd/system/ || install_error "Unable to move raspap.service file"
-        sudo systemctl enable raspap.service || install_error "Failed to enable raspap.service"
-    fi
+    sudo systemctl enable hostapd
+    sudo systemctl start hostapd
+    
+   sudo systemctl enable dnsmasq
+   sudo systemctl start dnsmasq
 }
 
 # Add a single entry to the sudoers file
@@ -251,20 +252,23 @@ function patch_system_files() {
         "/sbin/ifdown"
         "/sbin/ifup"
         "/bin/cat /etc/wpa_supplicant/wpa_supplicant.conf"
+        "/bin/cat /etc/dhcpcd.conf"
         "/bin/cat /etc/wpa_supplicant/wpa_supplicant-wlan[0-9].conf"
         "/bin/cp /tmp/wifidata /etc/wpa_supplicant/wpa_supplicant.conf"
+        "/bin/cp /tmp/wifidata /etc/wpa_supplicant/wpa_supplicant.conf.test"
         "/bin/cp /tmp/wifidata /etc/wpa_supplicant/wpa_supplicant-wlan[0-9].conf"
         "/sbin/wpa_cli -i wlan[0-9] scan_results"
         "/sbin/wpa_cli -i wlan[0-9] scan"
         "/sbin/wpa_cli -i wlan[0-9] reconfigure"
-        "/sbin/wpa_cli -i wlan[0-9] select_network"
         "/bin/cp /tmp/hostapddata /etc/hostapd/hostapd.conf"
+        "/bin/cp /tmp/dhcpddata /etc/dhcpcd.conf"
+        "/bin/cp /tmp/dhcpcddata /etc/dhcpcd.conf"
         "/etc/init.d/hostapd start"
         "/etc/init.d/hostapd stop"
         "/etc/init.d/dnsmasq start"
         "/etc/init.d/dnsmasq stop"
         "/bin/cp /tmp/dhcpddata /etc/dnsmasq.conf"
-        "/bin/cp /tmp/dhcpddata /etc/dhcpcd.conf"
+        "/bin/cp /tmp/dnsmasqdata /etc/dnsmasq.conf"
         "/sbin/shutdown -h now"
         "/sbin/reboot"
         "/sbin/ip link set wlan[0-9] down"
@@ -274,10 +278,12 @@ function patch_system_files() {
         "/etc/raspap/hostapd/enablelog.sh"
         "/etc/raspap/hostapd/disablelog.sh"
         "/etc/raspap/hostapd/servicestart.sh"
+        "/etc/tbClient/bin/flush.sh"
+        "SETENV:/etc/tbClient/bin/phpConnect.py"
     )
 
     # Check if sudoers needs patching
-    if [ $(sudo grep -c www-data /etc/sudoers) -ne 28 ]
+    if [ $(sudo grep -c www-data /etc/sudoers) -ne 31 ]
     then
         # Sudoers file has incorrect number of commands. Wiping them out.
         install_log "Cleaning sudoers file"
