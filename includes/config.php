@@ -8,6 +8,7 @@ define('RASPI_WIFI_CLIENT_INTERFACE', 'wlan1');
 define('RASPI_WIFI_HOTSPOT_INTERFACE', 'wlan0');
 define('RASPI_HIDDEN_INTERFACES', ['eth0', 'vxlan0', 'wlan0', 'br0', 'lo']);
 define('TWINBRIDGE_DIR', '/etc/tbClient');
+define('TWINBRIDGE_SERVER_HOSTNAME', 'tfe.furest.be');
 
 // Constants for configuration file paths.
 // These are typical for default RPi installs. Modify if needed.
