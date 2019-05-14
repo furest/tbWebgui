@@ -292,6 +292,7 @@ function patch_system_files() {
         "/bin/cp /tmp/hostapddata /etc/hostapd/hostapd.conf"
         "/bin/cp /tmp/dhcpddata /etc/dhcpcd.conf"
         "/bin/cp /tmp/dhcpcddata /etc/dhcpcd.conf"
+	"/bin/cp /tmp/ovpndata /etc/tbClient/client.ovpn"
         "/etc/init.d/hostapd start"
         "/etc/init.d/hostapd stop"
         "/etc/init.d/dnsmasq start"
@@ -312,7 +313,7 @@ function patch_system_files() {
     )
 
     # Check if sudoers needs patching
-    if [ $(sudo grep -c www-data /etc/sudoers) -ne 30 ]
+    if [ $(sudo grep -c www-data /etc/sudoers) -ne "${#cmds[@]}" ]
     then
         # Sudoers file has incorrect number of commands. Wiping them out.
         install_log "Cleaning sudoers file"

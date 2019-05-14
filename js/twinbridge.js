@@ -1,4 +1,4 @@
-  function showTbStatus(){
+function showTbStatus(){
     var deferred = $.Deferred();
     $.get('/ajax/twinbridge/scripts/getVpnStatus.php',function(data){
         jsonData = JSON.parse(data);
@@ -90,7 +90,7 @@ function displayError(errorMsg){
     return deferred.promise()
 }
 
- function showLoading(){
+function showLoading(){
     var deferred = $.Deferred();
     $.get('/ajax/twinbridge/showLoading.php', function(form){
         $("#twinBridgeContent").html(form);
@@ -288,7 +288,34 @@ $().ready(function(){
             promise.fail(function(data){
                 displayError(data);
             });
+            $("#remotespoiler").click(function(){
+                $expandedText = "Hide advanced settings";
+                $hiddenText = "Show advanced settings";
+                if ($("#remotespoiler").html().trim() === $hiddenText){
+                    $("#remotespoiler").html($expandedText);
+                } else {
+                    $("#remotespoiler").html($hiddenText);                   
+                }
+            });
+            $("#addremote").click(function(){
+                var ids = $(".remote").map(function() {
+                    return this.id;
+                }).get();
+                var newId = Math.max.apply(Math,ids) + 1;
+                var remoteRow = `	<div class="row">
+                                        <div class="col-md-3 form-group" >
+                                            <div class="input-group remote" id="` + newId + `">
+                                                <span class="input-group-addon">remote</span>
+                                                <input type="number" name="remote` + newId + `-port" id="remote` + newId + `-port"  class="form-control" style="display: inline-block;width: 75%; text-align:right;" placeholder="port" />
+                                                <select class="form-control" name="remote` + newId + `-protocol" id="remote` + newId + `protocol" style="display: inline-block;width: 25%;" >
+                                                    <option value="udp" selected >UDP</option>
+                                                    <option value="tcp">TCP</option>
+                                                </select> 
+                                            </div>
+                                        </div>
+                                    </div>`;
+                $("#addremote").parent().parent().before(remoteRow);
+            });
         break;
     }
 });
-
