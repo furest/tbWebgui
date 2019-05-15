@@ -364,9 +364,6 @@ function install_complete() {
     fi
 }
 
-
-
-
 function install_raspap() {
     display_welcome
     config_installation
@@ -387,4 +384,3 @@ function install_raspap() {
     install_complete
 }
 
-install_raspap
