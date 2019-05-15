@@ -153,7 +153,7 @@ function displayActionForm(){
         $("#twinBridgeContent").html(form);
 
         $("#createBtn").click(function(){
-            var displayPromose = displayAcademiesListForm();
+            var displayPromise = displayAcademiesListForm();
             displayPromise.fail(function(data){
                 displayError(data);
             });
