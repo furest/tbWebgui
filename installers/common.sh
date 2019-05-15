@@ -299,6 +299,7 @@ function patch_system_files() {
         "/bin/cp /tmp/dhcpddata /etc/dhcpcd.conf"
         "/bin/cp /tmp/dhcpcddata /etc/dhcpcd.conf"
 	"/bin/cp /tmp/ovpndata /etc/tbClient/client.ovpn"
+	"/bin/cp /tmp/hostsdata /etc/hosts"
         "/etc/init.d/hostapd start"
         "/etc/init.d/hostapd stop"
         "/etc/init.d/dnsmasq start"
