@@ -343,7 +343,7 @@ function detectPorts(){
         if(jsonEvent.type == 'done'){
             console.log('done');
             source.close();
-            setTimeout(location.reload.bind(location), 1500);
+            setTimeout(window.location = window.location.href, 1500);
         } else{
             console.log(jsonEvent.data)
             $("#detectProgress")
