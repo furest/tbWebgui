@@ -47,7 +47,12 @@ function DisplayDHCPConfig()
                 $firstIp = ($intIp & $intMask)+1;
                 $hotspotConfig['ip_address'] = long2ip($firstIp).'/'.$cidr;
                 write_php_ini($hotspotConfig,RASPI_CONFIG_NETWORKING.'/'.RASPI_WIFI_HOTSPOT_INTERFACE.'.ini');
-                
+                $hostname = gethostname();
+                $hosts = file_get_contents("/etc/hosts");
+                $newHosts = preg_replace('/(.*\s+)(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})(\s*'.$hostname.'\s*)/', '${1}'.long2ip($firstIp).'${3}', $hosts);
+                file_put_contents("/tmp/hostsdata", $newHosts);
+                exec('sudo /bin/cp /tmp/hostsdata /etc/hosts');
+
                 $config = 'interface='.RASPI_WIFI_HOTSPOT_INTERFACE.PHP_EOL.
                       'dhcp-range='.long2ip($firstIp+1).','.$_POST['RangeEnd'].
                       ',255.255.255.0,';
