@@ -91,6 +91,19 @@ function DisplayTwinBridge($username, $password)
 							</div>
 							<div class="tab-pane fade <?php if(isset($_POST['save'])){echo("active in");}?>" id="settings">
 								<p><?php $status->showMessages(); ?></p>
+								<div class="row">	
+									<div class="col-md-10" id="colProgress" hidden>
+										<p></p>
+										<div class="progress">
+											<div id="detectProgress" class="progress-bar progress-bar-success progress-bar-striped" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" style="width: 0%" role="progressbar">
+												<span class="sr-only">0% Complete (success)</span>
+											</div>
+										</div>
+									</div>
+									<div class="col-md-2 pull-right">
+										<a class="btn btn-block btn-info" id="autoDetectBtn" style="padding:10px;float: right;display: block;position: relative;">Detect</a>
+									</div>
+								</div>
 								<form method="POST" action="?page=twinbridge">
 								<?php CSRFToken();?>
 									<div class="row">
@@ -119,11 +132,14 @@ function DisplayTwinBridge($username, $password)
 												<div class="col-md-3 form-group" >
 													<div class="input-group remote" id="<?php echo $index; ?>">
 														<span class="input-group-addon">remote</span>
-														<input type="number" name="remote<?php echo $index; ?>-port" id="remote<?php echo $index; ?>-port"  class="form-control" style="display: inline-block;width: 75%; text-align:right;" placeholder="port" value="<?php echo $remote['port'];?>"/>
+														<input type="number" name="remote<?php echo $index; ?>-port" id="remote<?php echo $index; ?>-port"  class="form-control" style="display: inline-block;width: 65%; text-align:right;" placeholder="port" value="<?php echo $remote['port'];?>"/>
 														<select class="form-control" name="remote<?php echo $index; ?>-protocol" id="remote<?php echo $index; ?>-protocol" style="display: inline-block;width: 25%;" >
 															<option value="udp" <?php if(strtoupper($remote['protocol']) == "UDP"){echo "selected";} ?>>UDP</option>
 															<option value="tcp" <?php if(strtoupper($remote['protocol']) == "TCP"){echo "selected";} ?>>TCP</option>
 														</select> 
+														<a class="btn btn-danger form-control" onclick="deleteRemote(<?php echo $index;?>)" style="display: inline-block;width: 10%;">
+															<i class="fa fa-trash" aria-hidden="true"></i>
+														</a>
 													</div>
 												</div>
 											</div>

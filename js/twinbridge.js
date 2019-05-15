@@ -278,6 +278,10 @@ function displayActionForm(){
     return deferred.promise();
 }
 
+function deleteRemote(id){
+    $('#'+id).parent().parent().remove();
+}
+
 $().ready(function(){
     csrf = $('#csrf_token').val();
     pageCurrent = window.location.href.split("?")[1].split("=")[1];
@@ -306,16 +310,46 @@ $().ready(function(){
                                         <div class="col-md-3 form-group" >
                                             <div class="input-group remote" id="` + newId + `">
                                                 <span class="input-group-addon">remote</span>
-                                                <input type="number" name="remote` + newId + `-port" id="remote` + newId + `-port"  class="form-control" style="display: inline-block;width: 75%; text-align:right;" placeholder="port" />
+                                                <input type="number" name="remote` + newId + `-port" id="remote` + newId + `-port"  class="form-control" style="display: inline-block;width: 65%; text-align:right;" placeholder="port" />
                                                 <select class="form-control" name="remote` + newId + `-protocol" id="remote` + newId + `protocol" style="display: inline-block;width: 25%;" >
                                                     <option value="udp" selected >UDP</option>
                                                     <option value="tcp">TCP</option>
                                                 </select> 
+                                                <a class="btn btn-danger form-control" onclick="deleteRemote(` + newId+ `)" style="display: inline-block;width: 10%;">
+                                                    <i class="fa fa-trash" aria-hidden="true"></i>
+                                                </a>
                                             </div>
                                         </div>
                                     </div>`;
                 $("#addremote").parent().parent().before(remoteRow);
             });
+            $("#autoDetectBtn").click(function(){
+                detectPorts();
+            });
         break;
     }
 });
+
+function detectPorts(){
+    $("#colProgress").show();
+    var retry = $("#connect-retry").val();
+    var timeout = $("#connect-timeout").val();
+    var source = new EventSource('/ajax/twinbridge/scripts/detectPorts.php?retry='+retry + '&timeout='+timeout);
+    source.onmessage = function (event) {
+        if(event.data === ""){
+            return;
+        }
+        jsonEvent = JSON.parse(event.data);
+        if(jsonEvent.type == 'done'){
+            console.log('done');
+            source.close();
+            setTimeout(location.reload.bind(location), 1500);
+        } else{
+            console.log(jsonEvent.data)
+            $("#detectProgress")
+            .css("width", jsonEvent.data + "%")
+            .attr("aria-valuenow", jsonEvent.data)
+            .text(jsonEvent.data + "% Complete");
+        }
+    }; 
+}
