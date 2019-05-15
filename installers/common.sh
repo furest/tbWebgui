@@ -344,6 +344,10 @@ function install_tbclient(){
     sudo /etc/tbClient/setup.sh
 }
 
+function change_hostname(){
+	sudo hostnamectl set-hostname twinbridge
+}
+
 function install_complete() {
     install_log "Installation completed!"
 
@@ -359,6 +363,8 @@ function install_complete() {
         sudo shutdown -r now || install_error "Unable to execute shutdown"
     fi
 }
+
+
 
 
 function install_raspap() {
@@ -377,6 +383,7 @@ function install_raspap() {
     default_configuration
     patch_system_files
     install_tbclient
+    change_hostname
     install_complete
 }
 
