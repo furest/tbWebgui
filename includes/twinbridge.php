@@ -101,7 +101,7 @@ function DisplayTwinBridge($username, $password)
 										</div>
 									</div>
 									<div class="col-md-2 pull-right">
-										<a class="btn btn-block btn-info" id="autoDetectBtn" style="padding:10px;float: right;display: block;position: relative;">Detect</a>
+										<a class="btn btn-block btn-info" id="autoDetectBtn" style="padding:10px;float: right;display: block;position: relative;"><?php echo _("Detect open ports");?></a>
 									</div>
 								</div>
 								<form method="POST" action="?page=twinbridge">
