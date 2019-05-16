@@ -132,8 +132,8 @@ function DisplayTwinBridge($username, $password)
 												<div class="col-md-3 form-group" >
 													<div class="input-group remote" id="<?php echo $index; ?>">
 														<span class="input-group-addon">remote</span>
-														<input type="number" name="remote<?php echo $index; ?>-port" id="remote<?php echo $index; ?>-port"  class="form-control" style="display: inline-block;width: 65%; text-align:right;" placeholder="port" value="<?php echo $remote['port'];?>"/>
-														<select class="form-control" name="remote<?php echo $index; ?>-protocol" id="remote<?php echo $index; ?>-protocol" style="display: inline-block;width: 25%;" >
+														<input type="number" name="remote<?php echo $index; ?>-port" id="remote<?php echo $index; ?>-port"  class="form-control" style="display: inline-block;width: 55%; text-align:right;" placeholder="port" value="<?php echo $remote['port'];?>"/>
+														<select class="form-control" name="remote<?php echo $index; ?>-protocol" id="remote<?php echo $index; ?>-protocol" style="display: inline-block;width: 35%;" >
 															<option value="udp" <?php if(strtoupper($remote['protocol']) == "UDP"){echo "selected";} ?>>UDP</option>
 															<option value="tcp" <?php if(strtoupper($remote['protocol']) == "TCP"){echo "selected";} ?>>TCP</option>
 														</select> 
