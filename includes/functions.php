@@ -541,7 +541,7 @@ function gen_config(){
                 if($cnfFile['domain_name_server'] != ""){
                     $strConfFile .= "static domain_name_servers=".$cnfFile['domain_name_server']."\n";
                 }
-                if($confFile['nohookWPASupplicant'] == true){
+                if(isset($cnfFile['nohookWPASupplicant']) && $cnfFile['nohookWPASupplicant'] == true){
                     $strConfFile .= "nohook wpa_supplicant"."\n";
                 }
             } elseif($cnfFile['static'] == false && $cnfFile['failover'] === true) {
