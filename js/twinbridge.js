@@ -310,12 +310,12 @@ $().ready(function(){
                                         <div class="col-md-3 form-group" >
                                             <div class="input-group remote" id="` + newId + `">
                                                 <span class="input-group-addon">remote</span>
-                                                <input type="number" name="remote` + newId + `-port" id="remote` + newId + `-port"  class="form-control" style="display: inline-block;width: 65%; text-align:right;" placeholder="port" />
-                                                <select class="form-control" name="remote` + newId + `-protocol" id="remote` + newId + `protocol" style="display: inline-block;width: 25%;" >
+                                                <input type="number" name="remote` + newId + `-port" id="remote` + newId + `-port"  class="form-control" style="display: inline-block;width: 50%; text-align:right;" placeholder="port" />
+                                                <select class="form-control" name="remote` + newId + `-protocol" id="remote` + newId + `protocol" style="display: inline-block;width: 35%;" >
                                                     <option value="udp" selected >UDP</option>
                                                     <option value="tcp">TCP</option>
                                                 </select> 
-                                                <a class="btn btn-danger form-control" onclick="deleteRemote(` + newId+ `)" style="display: inline-block;width: 10%;">
+                                                <a class="btn btn-danger form-control" onclick="deleteRemote(` + newId+ `)" style="display: inline-block;width: 15%;">
                                                     <i class="fa fa-trash" aria-hidden="true"></i>
                                                 </a>
                                             </div>
