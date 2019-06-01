@@ -142,6 +142,7 @@ $().ready(function(){
     $('#side-menu').metisMenu();
     switch(pageCurrent) {
         case "network_conf":
+        case "wpa_conf":
             getAllInterfaces();
             setupTabs();
             setupBtns();

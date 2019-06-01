@@ -6,7 +6,7 @@ define('RASPI_CONFIG_NETWORKING', RASPI_CONFIG.'/networking');
 define('RASPI_ADMIN_DETAILS', RASPI_CONFIG.'/raspap.auth');
 define('RASPI_WIFI_CLIENT_INTERFACE', 'wlan1');
 define('RASPI_WIFI_HOTSPOT_INTERFACE', 'wlan0');
-define('RASPI_HIDDEN_INTERFACES', ['eth0', 'vxlan0', 'wlan0', 'br0', 'lo']);
+define('RASPI_HIDDEN_INTERFACES', ['eth0', 'vxlan0', 'wlan0', 'br0', 'lo', 'tun0']);
 define('TWINBRIDGE_DIR', '/etc/tbClient');
 define('TWINBRIDGE_SERVER_HOSTNAME', 'tfe.furest.be');
 
@@ -28,12 +28,14 @@ define('RASPI_WIFICLIENT_ENABLED', true);
 define('RASPI_TWINBRIDGE_ENABLED', true);
 define('RASPI_HOTSPOT_ENABLED', true);
 define('RASPI_NETWORK_ENABLED', true);
-define('RASPI_DHCP_ENABLED', true);
+define('RASPI_DHCP_ENABLED', false);
 define('RASPI_OPENVPN_ENABLED', false);
 define('RASPI_TORPROXY_ENABLED', false);
 define('RASPI_CONFAUTH_ENABLED', true);
-define('RASPI_CHANGETHEME_ENABLED', true);
+define('RASPI_CHANGETHEME_ENABLED', false);
 define('RASPI_VNSTAT_ENABLED', false);
+define('RASPI_SYSTEM_ENABLED', false);
+define('RASPI_ABOUT_ENABLED', false);
 
 // Locale settings
 define('LOCALE_ROOT', 'locale');

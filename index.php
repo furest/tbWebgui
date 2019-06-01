@@ -137,18 +137,18 @@ $theme_url = 'dist/css/'.htmlspecialchars($theme, ENT_QUOTES);
             <?php endif; ?>
             <?php if (RASPI_WIFICLIENT_ENABLED) : ?>
               <li>
-                <a href="index.php?page=wpa_conf"><i class="fa fa-wifi fa-fw"></i> <?php echo _("Configure WiFi client"); ?></a>
-              </li>
-            <?php endif; ?>
-            <?php if (RASPI_HOTSPOT_ENABLED) : ?>
-              <li>
-                <a href="index.php?page=hostapd_conf"><i class="fa fa-dot-circle-o fa-fw"></i> <?php echo _("Configure hotspot"); ?></a>
+                <a href="index.php?page=wpa_conf"><i class="fa fa-wifi fa-fw"></i> <?php echo _("Configure WiFi"); ?></a>
               </li>
             <?php endif; ?>
             <?php if (RASPI_NETWORK_ENABLED) : ?>
               <li>
-                 <a href="index.php?page=network_conf"><i class="fa fa-sitemap fa-fw"></i> <?php echo _("Configure networking"); ?></a>
+                 <a href="index.php?page=network_conf"><i class="fa fa-sitemap fa-fw"></i> <?php echo _("Configure Ethernet"); ?></a>
               </li> 
+            <?php endif; ?>
+            <?php if (RASPI_HOTSPOT_ENABLED) : ?>
+              <li>
+                <a href="index.php?page=hostapd_conf"><i class="fa fa-dot-circle-o fa-fw"></i> <?php echo _("Configure Hotspot"); ?></a>
+              </li>
             <?php endif; ?>
             <?php if (RASPI_DHCP_ENABLED) : ?>
               <li>
@@ -180,12 +180,16 @@ $theme_url = 'dist/css/'.htmlspecialchars($theme, ENT_QUOTES);
                 <a href="index.php?page=data_use"><i class="fa fa-bar-chart fa-fw"></i> <?php echo _("Data usage"); ?></a>
               </li>
             <?php endif; ?>
+            <?php if (RASPI_SYSTEM_ENABLED) : ?>
               <li>
                 <a href="index.php?page=system_info"><i class="fa fa-cube fa-fw"></i> <?php echo _("System"); ?></a>
               </li>
+            <?php endif; ?>
+            <?php if (RASPI_ABOUT_ENABLED) : ?>
                <li>
                 <a href="index.php?page=about"><i class="fa fa-info-circle fa-fw"></i> <?php echo _("About RaspAP"); ?></a>
               </li>
+            <?php endif; ?>
            </ul>
           </div><!-- /.navbar-collapse -->
         </div><!-- /.navbar-default -->
