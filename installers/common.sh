@@ -250,7 +250,7 @@ function default_configuration() {
     sudo mv $webroot_dir/config/dhcpcd.conf /etc/dhcpcd.conf || install_error "Unable to move dhdpcd.conf configuration file"
     sudo mv $webroot_dir/config/defaults $raspap_dir/networking/defaults || install_error "Unable to move default networking configuration file"
     sudo mv $webroot_dir/config/wlan0.ini $raspap_dir/networking/wlan0.ini || install_error "Unable to move wlan0 configuration file"
-
+    sudo mv $webroot_dir/config/hosts /etc/hosts || install_error "Unable to move hosts defaults file"
     # Generate required lines for Rasp AP to place into rc.local file.
     # #RASPAP is for removal script
     lines=(
