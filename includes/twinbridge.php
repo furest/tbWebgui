@@ -18,8 +18,8 @@ function DisplayTwinBridge()
 					break;
 				}
 				$savedRemotes[$index] = array(
-					port => $port,
-					protocol => $protocol
+					'port' => $port,
+					'protocol' => $protocol
 				);
 			}
 		}
@@ -58,9 +58,9 @@ function DisplayTwinBridge()
 	if(preg_match_all('/\s*remote\s+([a-zA-Z0-0\.\-]+)\s+(\d+)\s+(tcp|udp)\s*/', $content, $foundRemotes, PREG_SET_ORDER)){
 		foreach($foundRemotes as $remote){
 			$newRemote = array(
-							host => $remote[1],
-							port => $remote[2],
-							protocol => $remote[3]
+							'host' => $remote[1],
+							'port' => $remote[2],
+							'protocol' => $remote[3]
 						);
 			$remotes[] = $newRemote;
 		}
