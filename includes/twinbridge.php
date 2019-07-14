@@ -2,7 +2,7 @@
 
 include_once('includes/status_messages.php');
 
-function DisplayTwinBridge($username, $password)
+function DisplayTwinBridge()
 {
 	$status = new StatusMessages();
 	if(isset($_POST['save'])){
