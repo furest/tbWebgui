@@ -4,37 +4,37 @@
  *
  *
  */
-function DisplayWPAConfig()
-{
-    $status = new StatusMessages();
-    $networks = array();
-
-    // Find currently configured networks
+function ParseWPASupplicant(){
     exec(' sudo cat ' . RASPI_WPA_SUPPLICANT_CONFIG, $known_return);
-
-    $network = null;
-    $ssid = null;
-
-
+    $networks = array();
+    $network = NULL;
     //Parses the content of /etc/wpa_supplicant/wpa_supplicant.conf
     foreach ($known_return as $line) {
-        if (preg_match('/network\s*=/', $line)) {
+            /*Initializes the array for the currently parsed network */
+        if (preg_match('/network\s*=/', $line)) { 
             $network = array('visible' => false, 'configured' => true, 'connected' => false);
-        } elseif ($network !== null) {
+        } 
+        elseif ($network !== null) 
+        {
+                /*Stores the currently parsed network in the $networks array */
             if (preg_match('/^\s*}\s*$/', $line)) {
                 $networks[$ssid] = $network;
                 $network = null;
                 $ssid = null;
-            } elseif ($lineArr = preg_split('/\s*=\s*/', trim($line))) {
+            }   /*Sets parameter for currently parsed network */
+            elseif ($lineArr = preg_split('/\s*=\s*/', trim($line))) 
+            {
                 switch (strtolower($lineArr[0])) {
                     case 'ssid':
                         $ssid = trim($lineArr[1], '"');
                         break;
                     case 'psk':
-                        if (array_key_exists('passphrase', $network)) { //Skips if passphrase already read. Falls through otherwise
+                        //Skips if passphrase already read. Falls through otherwise
+                        if (array_key_exists('passphrase', $network)) { 
                             break;
                         }
-                    case '#psk': //Recognises the protocol is WPA-PSK. Falls through.
+                    case '#psk': 
+                        //Recognises the protocol is WPA-PSK. Falls through.
                         //do nothing
                     case 'wep_key0': // Untested
                         $network['passphrase'] = trim($lineArr[1], '"');
@@ -69,157 +69,216 @@ function DisplayWPAConfig()
             }
         }
     }
+    return $networks;
+}
 
-    if (isset($_POST['connect'])) { //If "connect" has been clicked on a SSID
-        $result = 0;
-        exec('sudo wpa_cli -i ' . RASPI_WPA_CTRL_INTERFACE . ' select_network ' . strval($_POST['connect']));
-    } elseif (isset($_POST['client_settings']) && CSRFValidate()) {
-        $tmp_networks = $networks;
-        if ($wpa_file = fopen('/tmp/wifidata', 'w')) {
-            fwrite($wpa_file, 'ctrl_interface=DIR=' . RASPI_WPA_CTRL_INTERFACE . ' GROUP=netdev' . PHP_EOL);
-            fwrite($wpa_file, 'update_config=1' . PHP_EOL);
+function WriteWPASupplicant($networks){
+    $wpasup  = 'ctrl_interface=DIR=' . RASPI_WPA_CTRL_INTERFACE . ' GROUP=netdev' . PHP_EOL;
+    $wpasup .= 'update_config=1' . PHP_EOL;
 
-            //Adds the info of the updates/created network to the list of saved/detected networks
-            foreach (array_keys($_POST) as $post) {
-                if (preg_match('/delete(\d+)/', $post, $post_match)) {
-                    unset($tmp_networks[$_POST['ssid' . $post_match[1]]]);
-                } elseif (preg_match('/update(\d+)/', $post, $post_match)) {
-                    // NB, at the moment, the value of protocol from the form may
-                    // contain HTML line breaks
-                    if (preg_match('/^(WPA\d?-EAP)/', $_POST['protocol' . $post_match[1]])) {
-                        $tmp_networks[$_POST['ssid' . $post_match[1]]] = array(
-                            'protocol' =>  "WPA-EAP",
-                            'passphrase' => $_POST['passphrase' . $post_match[1]],
-                            'username' => $_POST['username' . $post_match[1]],
-                            'firstphase' => $_POST['firstphase' . $post_match[1]],
-                            'secondphase' => $_POST['secondphase' . $post_match[1]],
-                            'configured' => true
-                        );
-                    } else {
-                        $tmp_networks[$_POST['ssid' . $post_match[1]]] = array(
-                            'protocol' => ($_POST['protocol' . $post_match[1]] === 'Open' ? 'Open' : 'WPA-PSK'),
-                            'passphrase' => $_POST['passphrase' . $post_match[1]],
-                            'configured' => true
-                        );
-                    }
-
-                    if (array_key_exists('priority' . $post_match[1], $_POST)) {
-                        $tmp_networks[$_POST['ssid' . $post_match[1]]]['priority'] = $_POST['priority' . $post_match[1]];
-                    }
-                }
-            }
-
-            //Generates the new wpa_supplicant.conf file
-            $ok = true;
-            foreach ($tmp_networks as $ssid => $network) {
-                if ($network['protocol'] === 'Open') {
-                    fwrite($wpa_file, "network={" . PHP_EOL);
-                    fwrite($wpa_file, "\tssid=\"" . $ssid . "\"" . PHP_EOL);
-                    fwrite($wpa_file, "\tkey_mgmt=NONE" . PHP_EOL);
-                    if (array_key_exists('priority', $network)) {
-                        fwrite($wpa_file, "\tpriority=" . $network['priority'] . PHP_EOL);
-                    }
-                    fwrite($wpa_file, "}" . PHP_EOL);
-                } elseif ($network['protocol'] === 'WPA-EAP') {
-                    if (strlen($network['passphrase']) >= 8 && strlen($network['passphrase']) <= 63) {
-                        fwrite($wpa_file, "network={" . PHP_EOL);
-                        fwrite($wpa_file, "\tssid=\"" . $ssid . "\"" . PHP_EOL);
-                        fwrite($wpa_file, "\tkey_mgmt=WPA-EAP" . PHP_EOL);
-                        fwrite($wpa_file, "\teap=" . $network['firstphase'] . PHP_EOL);
-                        if ($network['secondphase'] !== 'None') {
-                            fwrite($wpa_file, "\tphase2=\"auth=" . $network['secondphase'] . "\"" . PHP_EOL);
-                        }
-                        fwrite($wpa_file, "\tidentity=\"" . $network['username'] . "\"" . PHP_EOL);
-                        fwrite($wpa_file, "\tpassword=\"" . $network['passphrase'] . "\"" . PHP_EOL);
-                        if (array_key_exists('priority', $network)) {
-                            fwrite($wpa_file, "\tpriority=" . $network['priority'] . PHP_EOL);
-                        }
-                        fwrite($wpa_file, "}" . PHP_EOL);
-                    } else {
-                        $status->addMessage('WPA passphrase must be between 8 and 63 characters', 'danger');
-                        $ok = false;
-                    }
-                } else {
-                    if (strlen($network['passphrase']) >= 8 && strlen($network['passphrase']) <= 63) {
-                        unset($wpa_passphrase);
-                        unset($line);
-                        exec('wpa_passphrase ' . escapeshellarg($ssid) . ' ' . escapeshellarg($network['passphrase']), $wpa_passphrase);
-                        foreach ($wpa_passphrase as $line) {
-                            if (preg_match('/^\s*}\s*$/', $line)) {
-                                if (array_key_exists('priority', $network)) {
-                                    fwrite($wpa_file, "\tpriority=" . $network['priority'] . PHP_EOL);
-                                }
-                                fwrite($wpa_file, "\tkey_mgmt=WPA-PSK" . PHP_EOL);
-                                fwrite($wpa_file, $line . PHP_EOL);
-                            } else {
-                                fwrite($wpa_file, $line . PHP_EOL);
-                            }
-                        }
-                    } else {
-                        $status->addMessage('WPA passphrase must be between 8 and 63 characters', 'danger');
-                        $ok = false;
-                    }
-                }
-            }
-
-            //Generates the new wpa_supplicant.conf file
-            if ($ok) {
-                system('sudo cp /tmp/wifidata ' . RASPI_WPA_SUPPLICANT_CONFIG, $returnval);
-                if ($returnval == 0) {
-                    exec('sudo wpa_cli -i ' . RASPI_WIFI_CLIENT_INTERFACE . ' reconfigure', $reconfigure_out, $reconfigure_return);
-                    if ($reconfigure_return == 0) {
-                        $status->addMessage('Wifi settings updated successfully', 'success');
-                        $networks = $tmp_networks;
-                    } else {
-                        $status->addMessage('Wifi settings updated but cannot restart (cannot execute "wpa_cli reconfigure")', 'danger');
-                    }
-                } else {
-                    $status->addMessage('Wifi settings failed to be updated', 'danger');
-                }
-            }
-        } else {
-            $status->addMessage('Failed to update wifi settings', 'danger');
+    foreach ($networks as $ssid => $network) {
+        $wpasup .= "network={" . PHP_EOL;
+        $wpasup .= "\tssid=\"" . $ssid . "\"" . PHP_EOL;
+        if (array_key_exists('priority', $network) && is_numeric($network['priority'])) {
+            $wpasup .= "\tpriority=" . ($network['priority'] ?? "0") . PHP_EOL;
         }
+
+        if ($network['protocol'] === 'Open') {
+            $wpasup .= "\tkey_mgmt=NONE" . PHP_EOL;
+        } elseif ($network['protocol'] === 'WPA-EAP') {
+            if (strlen($network['passphrase']) < 8 && strlen($network['passphrase']) > 63) {
+                return "Password of network $ssid is not the correct length";
+            }
+            $wpasup .= "\tkey_mgmt=WPA-EAP" . PHP_EOL;
+            $wpasup .= "\teap=" . $network['firstphase'] . PHP_EOL;
+            if ($network['secondphase'] !== 'None') {
+                $wpasup .= "\tphase2=\"auth=" . $network['secondphase'] . "\"" . PHP_EOL;
+            }
+            $wpasup .= "\tidentity=\"" . $network['username'] . "\"" . PHP_EOL;
+            $wpasup .= "\tpassword=\"" . $network['passphrase'] . "\"" . PHP_EOL;
+                
+        } else {
+            if (strlen($network['passphrase']) < 8 && strlen($network['passphrase']) > 63) {
+                return "Password of network $ssid is not the correct length";
+            }
+            $wpasup .= "\tkey_mgmt=WPA-PSK" . PHP_EOL;
+            exec('wpa_passphrase ' . escapeshellarg($ssid) . ' ' . escapeshellarg($network['passphrase']), $wpa_passphrase);
+            foreach ($wpa_passphrase as $line) {
+                if (preg_match('/^\s*#?psk=([a-fA-F0-9]+|[\"a-zA-Z0-9_-]+)\s*$/', $line)) {
+                    $wpasup .= $line . PHP_EOL;
+                }
+            }
+            unset($wpa_passphrase);
+            unset($line);
+        }
+        $wpasup .= "}" . PHP_EOL;
     }
 
+    if (($wpa_file = fopen('/tmp/wifidata', 'w')) != false) {
+        fwrite($wpa_file, $wpasup);
+        fclose($wpa_file);
+        system('sudo cp /tmp/wifidata ' . RASPI_WPA_SUPPLICANT_CONFIG, $returnval);
+        if($returnval != 0){
+            return "Error when copying new wpa_supplicant.conf over the old one";
+        }
+    } else{
+        return "Error when creating temporary wpa_supplicant file";
+    }
+    return NULL;
+}
 
+function GetSurroundingNetworks(){
 
     exec('sudo wpa_cli -i ' . RASPI_WIFI_CLIENT_INTERFACE . ' scan');
     sleep(3);
     exec('sudo wpa_cli -i ' . RASPI_WIFI_CLIENT_INTERFACE . ' scan_results', $scan_return);
+    array_shift($scan_return); //skips headers line
 
-    array_shift($scan_return);
+    $scanned_networks = array();
 
     // display output
     foreach ($scan_return as $network) {
         $arrNetwork = preg_split("/[\t]+/", $network);  // split result into array
+        /* 0 is bssid
+         * 1 is frequency (channel)
+         * 2 is signal level
+         * 3 is security settings (WPA-PSK, WPA-EAP,...)
+         * 4 is SSID
+         */
+        $ssid = $arrNetwork[4]??"";
+        $scanned_networks[$ssid] = array(
+            'configured' => false,
+            'protocol' => ConvertToSecurity($arrNetwork[3]),
+            'channel' => ConvertToChannel($arrNetwork[1]),
+            'passphrase' => '',
+            'visible' => true,
+            'connected' => false,
+            'RSSI' => $arrNetwork[2]
+        );
+    }
+    return $scanned_networks;
 
-        // If network is saved
-        if (array_key_exists(4, $arrNetwork) && array_key_exists($arrNetwork[4], $networks)) {
-            $networks[$arrNetwork[4]]['visible'] = true;
-            $networks[$arrNetwork[4]]['channel'] = ConvertToChannel($arrNetwork[1]);
-            // TODO What if the security has changed?
-        } else {
-            $networks[$arrNetwork[4]] = array(
-                'configured' => false,
-                'protocol' => ConvertToSecurity($arrNetwork[3]),
-                'channel' => ConvertToChannel($arrNetwork[1]),
-                'passphrase' => '',
-                'visible' => true,
-                'connected' => false
+}
+
+function DisplayWPAConfig()
+{
+    /*When connect is clicked:
+     * - Check if networks needs to be added, updated or nothing + save file
+     * - Connect to the network exec('sudo wpa_cli -i ' . RASPI_WPA_CTRL_INTERFACE . ' select_network ' . strval($_POST['connect']));
+     * - Restart wpa_supplicant otherwise: exec('sudo wpa_cli -i ' . RASPI_WIFI_CLIENT_INTERFACE . ' reconfigure', $reconfigure_out, $reconfigure_return);
+     * - Scan surrounding networks
+     * - Update list of current networks
+     * - Get name of currently used network
+     */
+
+    $status = new StatusMessages();
+    $stored_networks = ParseWPASupplicant();   
+    $wpasup_needs_update = false;
+
+    if (isset($_POST['connect']) && CSRFValidate()) { //If "connect" has been clicked on a SSID then simply connect and don't try saving settings
+        $connectIndex = $_POST['connect']; //Index of the network to connect to, in the post request
+
+        $connectSSID = $_POST['ssid'.$connectIndex];
+
+        if(array_key_exists($connectSSID, $stored_networks)){
+
+            $newPassphrase = $_POST['passphrase'.$connectIndex];
+            $newPriority = $_POST['priority'.$connectIndex];
+            if($newPassphrase != $stored_networks[$connectSSID]['passphrase']){
+                $stored_networks[$connectSSID]['passphrase'] = $newPassphrase;
+                $wpasup_needs_update = true;
+            }
+            if($newPriority != ($stored_networks[$connectSSID]['priority'] ?? 0)){
+                $stored_networks[$connectSSID]['priority'] = $newPriority;
+                $wpasup_needs_update = true;
+            }
+
+            //Do we need to check additional parameters for EAP networks?
+            if(preg_match('/^(WPA\d?-EAP)/', $_POST['protocol'.$connectIndex])){
+
+                $newUsername = $_POST['username'.$connectIndex];
+                
+                $newFirstPhase = $_POST['firstphase'.$connectIndex];
+                $newSecondPhase = $_POST['secondphase'.$connectIndex];
+                if($newUsername != $stored_networks[$connectSSID]['username']){
+                    $stored_networks[$connectSSID]['username'] = $newUsername;
+                    $wpasup_needs_update = true;
+                }
+                if($newFirstPhase != $stored_networks[$connectSSID]['firstphase']){
+                    $stored_networks[$connectSSID]['firstphase'] = $newFirstPhase;
+                    $wpasup_needs_update = true;
+                }
+                if($newSecondPhase != $stored_networks[$connectSSID]['secondphase']){
+                    $stored_networks[$connectSSID]['secondphase'] = $newSecondPhase;
+                    $wpasup_needs_update = true;
+                }
+            }
+        } else{
+            $newNetwork = array(
+                'ssid' => $_POST['ssid'.$connectIndex],
+                'passphrase' => $_POST['passphrase'.$connectIndex],
+                'visible' => false, //Wether to grey it out or not. 
+                'connected' => false, //Whether to show the connected logo
+                'configured' => true //Whether to show the "V" mark showing it is a saved network
             );
+
+            if($_POST['priority'.$connectIndex] != 0){
+                $newNetwork['priority'] = $_POST['priority'.$connectIndex];
+            }
+
+            if(preg_match('/^(WPA\d?-EAP)/', $_POST['protocol'.$connectIndex])){
+                $newNetwork['protocol'] = "WPA-EAP";
+                $newNetwork['username'] = $_POST['username'.$connectIndex];
+                $newNetwork['firstphase'] = $_POST['firstphase'.$connectIndex];
+                $newNetwork['secondphase'] = $_POST['secondphase'.$connectIndex];
+            } else {
+                $newNetwork['protocol'] = ($_POST['protocol'.$connectIndex] === "Open" ? "Open" : "WPA-PSK");
+            }
+            $stored_networks[$newNetwork['ssid']] = $newNetwork;
+            $wpasup_needs_update = true;
         }
 
-        // Save RSSI
-        if (array_key_exists(4, $arrNetwork)) {
-            $networks[$arrNetwork[4]]['RSSI'] = $arrNetwork[2];
+    } elseif(isset($_POST['delete'])){
+        $deletedIndex = $_POST['delete'];
+        $deletedSSID = $_POST['ssid'.$deletedIndex];
+        unset($stored_networks[$deletedSSID]);
+        $wpasup_needs_update = true;
+    }
+
+    if($wpasup_needs_update){
+        unset($ret);
+        $ret = WriteWpaSupplicant($stored_networks);
+        if($ret != NULL){
+            $status->addMessage($ret, 'danger');
+        } else {
+            exec('sudo wpa_cli -i ' . RASPI_WIFI_CLIENT_INTERFACE . ' reconfigure', $reconfigure_out, $reconfigure_return);
+            sleep(1);
+        }
+    }    
+
+    if(isset($_POST['connect']) && CSRFValidate()){
+        exec('sudo wpa_cli -i '.RASPI_WIFI_CLIENT_INTERFACE." select_network `sudo wpa_cli list_networks | awk -F'\\t' '($2 == \"".$_POST['ssid'.$_POST['connect']]."\"){print $1}'` 2>&1");
+    }
+
+    $scanned_networks = GetSurroundingNetworks();
+
+    foreach ($scanned_networks as $scanned_ssid => $scanned_network) {
+
+        if(array_key_exists($scanned_ssid, $stored_networks)){
+            $stored_networks[$scanned_ssid]['visible'] = true;
+            $stored_networks[$scanned_ssid]['channel'] = $scanned_network['channel'];
+            $stored_networks[$scanned_ssid]['RSSI'] = $scanned_network['RSSI'];
+        }else{
+            $stored_networks[$scanned_ssid] = $scanned_network;
         }
     }
+
+    $all_networks = $stored_networks;
 
     exec('iwconfig ' . RASPI_WIFI_CLIENT_INTERFACE, $iwconfig_return);
     foreach ($iwconfig_return as $line) {
         if (preg_match('/ESSID:\"([^"]+)\"/i', $line, $iwconfig_ssid)) {
-            $networks[$iwconfig_ssid[1]]['connected'] = true;
+            $all_networks[$iwconfig_ssid[1]]['connected'] = true;
         }
     }
 
@@ -261,10 +320,9 @@ function DisplayWPAConfig()
                                     </script>
 
                                     <?php $index = 0; ?>
-                                    <?php foreach ($networks as $ssid => $network) { ?>
-
+                                    <?php foreach ($all_networks as $ssid => $network) { ?>
                                         <div class="col-md-6">
-                                            <div class="panel panel-default">
+                                            <div class="panel panel-default" <?php if(!$network["visible"]){echo('style="background:#DDDDDD;"');}?>>
                                                 <div class="panel-body">
 
                                                     <input type="hidden" name="ssid<?php echo $index ?>" value="<?php echo htmlentities($ssid, ENT_QUOTES) ?>" />
@@ -320,7 +378,7 @@ function DisplayWPAConfig()
                                                         <div class="form-group">
                                                             <div class="input-group col-xs-12 col-md-12">
                                                                 <span class="input-group-addon" id="phase1">Phase 1</span>
-                                                                <select class="form-control" aria-describedby="" name="firstphase<?php echo $index ?>">
+                                                                <select <?php if(!$network["visible"]){echo('disabled');}?> class="form-control" aria-describedby="" name="firstphase<?php echo $index ?>">
                                                                     <option <?php if ($network['firstphase'] == "PEAP") {
                                                                                 echo ('selected="true"');
                                                                             } ?>>PEAP</option>
@@ -336,7 +394,7 @@ function DisplayWPAConfig()
                                                         <div class="form-group">
                                                             <div class="input-group col-xs-12 col-md-12">
                                                                 <span class="input-group-addon" id="phase2">Phase 2</span>
-                                                                <select class="form-control" aria-describedby="" name="secondphase<?php echo $index ?>">
+                                                                <select <?php if(!$network["visible"]){echo('disabled');}?> class="form-control" aria-describedby="" name="secondphase<?php echo $index ?>">
                                                                     <option <?php if ($network['secondphase'] == "None") {
                                                                                 echo ('selected="true"');
                                                                             } ?>>None</option>
@@ -352,7 +410,7 @@ function DisplayWPAConfig()
                                                         <div class="form-group">
                                                             <div class="input-group col-xs-12 col-md-12">
                                                                 <span class="input-group-addon" id="username">Username</span>
-                                                                <input type="text" class="form-control" aria-describedby="username" name="username<?php echo $index ?>" value="<?php echo $network['username'] ?>" style="background-image: url(&quot;data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAACIUlEQVQ4EX2TOYhTURSG87IMihDsjGghBhFBmHFDHLWwSqcikk4RRKJgk0KL7C8bMpWpZtIqNkEUl1ZCgs0wOo0SxiLMDApWlgOPrH7/5b2QkYwX7jvn/uc//zl3edZ4PPbNGvF4fC4ajR5VrNvt/mo0Gr1ZPOtfgWw2e9Lv9+chX7cs64CS4Oxg3o9GI7tUKv0Q5o1dAiTfCgQCLwnOkfQOu+oSLyJ2A783HA7vIPLGxX0TgVwud4HKn0nc7Pf7N6vV6oZHkkX8FPG3uMfgXC0Wi2vCg/poUKGGcagQI3k7k8mcp5slcGswGDwpl8tfwGJg3xB6Dvey8vz6oH4C3iXcFYjbwiDeo1KafafkC3NjK7iL5ESFGQEUF7Sg+ifZdDp9GnMF/KGmfBdT2HCwZ7TwtrBPC7rQaav6Iv48rqZwg+F+p8hOMBj0IbxfMdMBrW5pAVGV/ztINByENkU0t5BIJEKRSOQ3Aj+Z57iFs1R5NK3EQS6HQqF1zmQdzpFWq3W42WwOTAf1er1PF2USFlC+qxMvFAr3HcexWX+QX6lUvsKpkTyPSEXJkw6MQ4S38Ljdbi8rmM/nY+CvgNcQqdH6U/xrYK9t244jZv6ByUOSiDdIfgBZ12U6dHEHu9TpdIr8F0OP692CtzaW/a6y3y0Wx5kbFHvGuXzkgf0xhKnPzA4UTyaTB8Ph8AvcHi3fnsrZ7Wore02YViqVOrRXXPhfqP8j6MYlawoAAAAASUVORK5CYII=&quot;); background-repeat: no-repeat; background-attachment: scroll; background-size: 16px 18px; background-position: 98% 50%; cursor: auto;">
+                                                                <input <?php if(!$network["visible"]){echo('disabled');}?> type="text" class="form-control" aria-describedby="username" name="username<?php echo $index ?>" value="<?php echo $network['username'] ?>" style="background-image: url(&quot;data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAACIUlEQVQ4EX2TOYhTURSG87IMihDsjGghBhFBmHFDHLWwSqcikk4RRKJgk0KL7C8bMpWpZtIqNkEUl1ZCgs0wOo0SxiLMDApWlgOPrH7/5b2QkYwX7jvn/uc//zl3edZ4PPbNGvF4fC4ajR5VrNvt/mo0Gr1ZPOtfgWw2e9Lv9+chX7cs64CS4Oxg3o9GI7tUKv0Q5o1dAiTfCgQCLwnOkfQOu+oSLyJ2A783HA7vIPLGxX0TgVwud4HKn0nc7Pf7N6vV6oZHkkX8FPG3uMfgXC0Wi2vCg/poUKGGcagQI3k7k8mcp5slcGswGDwpl8tfwGJg3xB6Dvey8vz6oH4C3iXcFYjbwiDeo1KafafkC3NjK7iL5ESFGQEUF7Sg+ifZdDp9GnMF/KGmfBdT2HCwZ7TwtrBPC7rQaav6Iv48rqZwg+F+p8hOMBj0IbxfMdMBrW5pAVGV/ztINByENkU0t5BIJEKRSOQ3Aj+Z57iFs1R5NK3EQS6HQqF1zmQdzpFWq3W42WwOTAf1er1PF2USFlC+qxMvFAr3HcexWX+QX6lUvsKpkTyPSEXJkw6MQ4S38Ljdbi8rmM/nY+CvgNcQqdH6U/xrYK9t244jZv6ByUOSiDdIfgBZ12U6dHEHu9TpdIr8F0OP692CtzaW/a6y3y0Wx5kbFHvGuXzkgf0xhKnPzA4UTyaTB8Ph8AvcHi3fnsrZ7Wore02YViqVOrRXXPhfqP8j6MYlawoAAAAASUVORK5CYII=&quot;); background-repeat: no-repeat; background-attachment: scroll; background-size: 16px 18px; background-position: 98% 50%; cursor: auto;">
                                                             </div>
                                                         </div>
                                                     <?php } ?>
@@ -360,9 +418,9 @@ function DisplayWPAConfig()
                                                         <div class="input-group col-xs-12 col-md-12">
                                                             <span class="input-group-addon" id="passphrase">Passphrase</span>
                                                             <?php if ($network['protocol'] === 'Open') { ?>
-                                                                <input type="password" disabled class="form-control" aria-describedby="passphrase" name="passphrase<?php echo $index ?>" value="" />
+                                                                <input <?php if(!$network["visible"]){echo('disabled');}?> type="password" disabled class="form-control" aria-describedby="passphrase" name="passphrase<?php echo $index ?>" value="" />
                                                             <?php } else { ?>
-                                                                <input type="password" class="form-control" aria-describedby="passphrase" name="passphrase<?php echo $index ?>" value="<?php echo $network['passphrase'] ?>" onKeyUp="CheckPSK(this, 'update<?php echo $index ?>')">
+                                                                <input <?php if(!$network["visible"]){echo('disabled');}?> type="password" class="form-control" aria-describedby="passphrase" name="passphrase<?php echo $index ?>" value="<?php echo $network['passphrase'] ?>" onKeyUp="CheckPSK(this, 'update<?php echo $index ?>')">
                                                                 <span class="input-group-btn">
                                                                     <button class="btn btn-default" onclick="showPassword(<?php echo $index; ?>)" type="button">Show</button>
                                                                 </span>
@@ -373,7 +431,7 @@ function DisplayWPAConfig()
                                                     <div class="form-group">
                                                         <div class="input-group col-xs-12 col-md-12">
                                                             <span class="input-group-addon" id="priority">Priority</span>
-                                                            <input type="number" min="0" max="255" class="form-control" aria-describedby="priority" name="priority<?php echo $index ?>" value="<?php if (array_key_exists('priority', $network)) {
+                                                            <input <?php if(!$network["visible"]){echo('disabled');}?> type="number" min="0" max="255" class="form-control" aria-describedby="priority" name="priority<?php echo $index ?>" value="<?php if (array_key_exists('priority', $network)) {
                                                                                                                                                                                                     echo ($network['passphrase']);
                                                                                                                                                                                                 } else {
                                                                                                                                                                                                     echo ("0");
@@ -382,13 +440,8 @@ function DisplayWPAConfig()
                                                     </div>
 
                                                     <div class="btn-group btn-block ">
-                                                        <?php if ($network['configured']) { ?>
-                                                            <input type="submit" class="col-xs-4 col-md-4 btn btn-warning" value="<?php echo _("Update"); ?>" id="update<?php echo $index ?>" name="update<?php echo $index ?>" <?php echo ($network['protocol'] === 'Open' ? ' disabled' : '') ?> />
-                                                            <button type="submit" class="col-xs-4 col-md-4 btn btn-info" value="<?php echo $index ?>"><?php echo _("Connect"); ?></button>
-                                                        <?php } else { ?>
-                                                            <input type="submit" class="col-xs-4 col-md-4 btn btn-info" value="<?php echo _("Add"); ?>" id="update<?php echo $index ?>" name="update<?php echo $index ?>" <?php echo ($network['protocol'] === 'Open' ? '' : ' disabled') ?> />
-                                                        <?php } ?>
-                                                        <input type="submit" class="col-xs-4 col-md-4 btn btn-danger" value="<?php echo _("Delete"); ?>" name="delete<?php echo $index ?>" <?php echo ($network['configured'] ? '' : ' disabled') ?> />
+                                                        <button type="submit" class="col-xs-4 col-md-4 btn btn-info <?php if(!$network['visible']){echo("disabled");}?>" name="connect" value="<?php echo $index ?>"><?php echo _("Connect"); ?></button>
+                                                        <button type="submit" class="col-xs-4 col-md-4 btn btn-danger <?php if(!$network['configured']){echo("disabled");}?>" name="delete" value="<?php echo $index ?>"><?php echo _("Delete"); ?></button>
                                                     </div><!-- /.btn-group -->
 
                                                 </div><!-- /.panel-body -->
