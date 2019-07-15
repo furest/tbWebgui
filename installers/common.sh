@@ -304,6 +304,8 @@ function patch_system_files() {
         "/sbin/wpa_cli -i wlan[0-9] scan_results"
         "/sbin/wpa_cli -i wlan[0-9] scan"
         "/sbin/wpa_cli -i wlan[0-9] reconfigure"
+	"/sbin/wpa_cli -i wlan[0-9] select_network *"
+	"/sbin/wpa_cli list_networks"
         "/bin/cp /tmp/hostapddata /etc/hostapd/hostapd.conf"
         "/bin/cp /tmp/dhcpddata /etc/dhcpcd.conf"
         "/bin/cp /tmp/dhcpcddata /etc/dhcpcd.conf"
