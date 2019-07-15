@@ -7,25 +7,25 @@ version=`sed 's/\..*//' /etc/debian_version`
 webroot_dir="/var/www/html" 
 if [ $version -eq 10 ]; then 
     version_msg="Raspian 10.0 (Buster)" 
-    php_package="php7.3-cgi" 
+    php_version="php7.3"
 elif [ $version -eq 9 ]; then 
     version_msg="Raspian 9.0 (Stretch)" 
-    php_package="php7.0-cgi" 
+    php_version="php7.0"
 elif [ $version -eq 8 ]; then 
     version_msg="Raspian 8.0 (Jessie)" 
-    php_package="php5-cgi" 
+    php_version="php5"
 else 
     version_msg="Raspian earlier than 8.0 (Wheezy)"
     webroot_dir="/var/www" 
-    php_package="php5-cgi" 
+    php_version="php5"
 fi
 
 phpcgiconf=""
-if [ "$php_package" = "php7.3-cgi" ]; then
+if [ "$php_version" = "php7.3" ]; then
     phpcgiconf="/etc/php/7.3/cgi/php.ini"
-elif [ "$php_package" = "php7.0-cgi" ]; then
+elif [ "$php_version" = "php7.0" ]; then
     phpcgiconf="/etc/php/7.0/cgi/php.ini"
-elif [ "$php_package" = "php5-cgi" ]; then
+elif [ "$php_version" = "php5" ]; then
     phpcgiconf="/etc/php5/cgi/php.ini"
 fi
 
@@ -111,7 +111,7 @@ function optimize_php() {
         sudo sed -i -E 's/^session\.cookie_httponly\s*=\s*(0|([O|o]ff)|([F|f]alse)|([N|n]o))\s*$/session.cookie_httponly = 1/' "$phpcgiconf"
     fi
 
-    if [ "$php_package" = "php7.0-cgi" ]; then
+    if [ "$php_version" = "php7.0" ] || [ "$php_version" = "php7.3" ]; then
         echo -n "Enable PHP OPCache (Recommended)? [Y/n]: "
         read answer
         if [ "$answer" != 'n' ] && [ "$answer" != 'N' ]; then
