@@ -91,6 +91,10 @@ function install_dependencies() {
     install_error "No function definition for install_dependencies"
 }
 
+function install_additionnal_drivers() {
+    # OVERLOAD THIS
+    install_error "No function definition for install_additionnal_drivers"
+}
 # Optimize configuration of php-cgi.
 function optimize_php() {
     install_log "Optimize PHP configuration"
