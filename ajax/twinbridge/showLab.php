@@ -14,7 +14,7 @@
     $page = '</p>';
     $page .= '<h3>' . _("Lab in progress") . '</h3>';
     $page .= '<div class="btn-group btn-block">';
-    $page .= '<a href="#" style="padding:10px;float: right;display: block;position: relative;margin-top: -55px;" class="col-md-2 btn btn-danger" id="kill" onclick="killVPN()" csrf="'.htmlspecialchars($_SESSION['csrf_token'], ENT_QUOTES).'">Disconnect</a>';
+    $page .= '<a href="#" style="padding:10px;float: right;display: block;position: relative;margin-top: -45px;" class="col-md-2 btn btn-danger" id="kill" onclick="killVPN()" csrf="'.htmlspecialchars($_SESSION['csrf_token'], ENT_QUOTES).'">Disconnect</a>';
     $page .= '</div>';
     $page .= '<div class="col-lg-6">';
     $page .= '<h4>'. _("Laboration informations") . '</h4>';
