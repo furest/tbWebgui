@@ -67,7 +67,7 @@ $theme_url = 'dist/css/'.htmlspecialchars($theme, ENT_QUOTES);
     <meta name="description" content="">
     <meta name="author" content="">
 
-    <title><?php echo _("Raspbian WiFi Configuration Portal"); ?></title>
+    <title><?php echo _("TwinBridge Configuration Portal"); ?></title>
 
     <!-- Bootstrap Core CSS -->
     <link href="vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
@@ -120,7 +120,7 @@ $theme_url = 'dist/css/'.htmlspecialchars($theme, ENT_QUOTES);
             <span class="icon-bar"></span>
             <span class="icon-bar"></span>
           </button>
-      <a class="navbar-brand" href="index.php"><?php echo _("RaspAP Wifi Portal"); ?> v<?php echo RASPI_VERSION; ?></a>
+      <a class="navbar-brand" href="index.php"><?php echo _("Twinbridge Project"); ?> v<?php echo RASPI_VERSION; ?></a>
         </div>
         <!-- /.navbar-header -->
 
@@ -129,7 +129,7 @@ $theme_url = 'dist/css/'.htmlspecialchars($theme, ENT_QUOTES);
           <div class="sidebar-nav navbar-collapse">
             <ul class="nav" id="side-menu">
               <li>
-                <a href="index.php?page=wlan0_info"><i class="fa fa-dashboard fa-fw fa-lg"></i> <?php echo _("Dashboard"); ?></a>
+                <a href="index.php?page=dashboard"><i class="fa fa-dashboard fa-fw fa-lg"></i> <?php echo _("Dashboard"); ?></a>
               </li>
               <?php if (RASPI_TWINBRIDGE_ENABLED) : ?>
               <li>
@@ -138,7 +138,7 @@ $theme_url = 'dist/css/'.htmlspecialchars($theme, ENT_QUOTES);
             <?php endif; ?>
             <?php if (RASPI_WIFICLIENT_ENABLED) : ?>
               <li>
-                <a href="index.php?page=wpa_conf"><i class="fa fa-wifi fa-fw fa-lg"></i> <?php echo _("Configure WiFi"); ?></a>
+                <a href="index.php?page=wifi_conf"><i class="fa fa-wifi fa-fw fa-lg"></i> <?php echo _("Configure WiFi"); ?></a>
               </li>
             <?php endif; ?>
             <?php if (RASPI_NETWORK_ENABLED) : ?>
@@ -153,7 +153,7 @@ $theme_url = 'dist/css/'.htmlspecialchars($theme, ENT_QUOTES);
             <?php endif; ?>
             <?php if (RASPI_HOTSPOT_ENABLED) : ?>
               <li>
-                <a href="index.php?page=hostapd_conf"><i class="fa fa-dot-circle-o fa-fw fa-lg"></i> <?php echo _("Configure Hotspot"); ?></a>
+                <a href="index.php?page=hotspot_conf"><i class="fa fa-dot-circle-o fa-fw fa-lg"></i> <?php echo _("Configure Hotspot"); ?></a>
               </li>
             <?php endif; ?>
             <?php if (RASPI_DHCP_ENABLED) : ?>
@@ -207,7 +207,7 @@ $theme_url = 'dist/css/'.htmlspecialchars($theme, ENT_QUOTES);
         <div class="row">
           <div class="col-lg-12">
             <h1 class="page-header">
-              <img class="logo" src="img/raspAP-logo.png" width="45" height="45">RaspAP
+              <img class="logo" src="img/tbLogo_512x512.png" width="45" height="45">TwinBridge
             </h1>
           </div>
         </div><!-- /.row -->
@@ -216,7 +216,7 @@ $theme_url = 'dist/css/'.htmlspecialchars($theme, ENT_QUOTES);
         $extraFooterScripts = array();
         // handle page actions
         switch ($page) {
-            case "wlan0_info":
+            case "dashboard":
                 DisplayDashboard();
                 break;
             case "twinbridge":
@@ -225,7 +225,7 @@ $theme_url = 'dist/css/'.htmlspecialchars($theme, ENT_QUOTES);
             case "dhcpd_conf":
                 DisplayDHCPConfig();
                 break;
-            case "wpa_conf":
+            case "wifi_conf":
                 DisplayWPAConfig();
                 break;
             case "network_conf":
@@ -234,33 +234,33 @@ $theme_url = 'dist/css/'.htmlspecialchars($theme, ENT_QUOTES);
             case "mobile_network":
                 DisplayMobileConfig();
                 break;
-            case "hostapd_conf":
+            case "hotspot_conf":
                 DisplayHostAPDConfig();
                 break;
-            case "openvpn_conf":
-                DisplayOpenVPNConfig();
-                break;
-            case "torproxy_conf":
-                DisplayTorProxyConfig();
-                break;
+            // case "openvpn_conf":
+            //     DisplayOpenVPNConfig();
+            //     break;
+            // case "torproxy_conf":
+            //     DisplayTorProxyConfig();
+            //     break;
             case "auth_conf":
                 DisplayAuthConfig($config['admin_user'], $config['admin_pass']);
                 break;
-            case "save_hostapd_conf":
-                SaveTORAndVPNConfig();
-                break;
-            case "theme_conf":
-                DisplayThemeConfig();
-                break;
-            case "data_use":
-                DisplayDataUsage($extraFooterScripts);
-                break;
-            case "system_info":
-                DisplaySystem();
-                break;
-            case "about":
-                DisplayAbout();
-                break;
+            // case "save_hostapd_conf":
+            //     SaveTORAndVPNConfig();
+            //     break;
+            // case "theme_conf":
+            //     DisplayThemeConfig();
+            //     break;
+            // case "data_use":
+            //     DisplayDataUsage($extraFooterScripts);
+            //     break;
+            // case "system_info":
+            //     DisplaySystem();
+            //     break;
+            // case "about":
+            //     DisplayAbout();
+            //     break;
             default:
                 DisplayDashboard();
         }

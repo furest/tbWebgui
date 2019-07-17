@@ -7,12 +7,12 @@
 }
 
 .panel-primary {
-	border-color: #c61931;
+	border-color: #23740b;
 }
 
 .panel-primary>.panel-heading {
-	border-color: #d8224c;
-	background-color: #d8224c;
+	border-color: #268a07;
+	background-color: #268a07;
 }
 
 .panel-footer {
@@ -20,13 +20,13 @@
 }
 
 .btn-primary.btn-outline {
-	color: #c61931;
-	border-color: #c61931;
+	color: #23740b;
+	border-color: #23740b;
 }
 
 .btn-primary:hover {
-	background-color: #c61931;
-	border-color: #c61931;
+	background-color: #23740b;
+	border-color: #23740b;
 }
 
 .info-item {

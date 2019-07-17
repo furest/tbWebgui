@@ -54,11 +54,11 @@ function DisplayDashboard()
         $ipv4Netmasks .= long2ip(-1 << (32 - (int)$matchesIpv4AddrAndSubnet[$i + 1][0]));
       }
     }
-    $ipv6Addrs = '';
+    $ipv6Addrs = array();
     if (!preg_match_all('/inet6 ([a-f0-9:]+)/i', $stdoutIpWRepeatedSpaces, $matchesIpv6Addr)) {
-      $ipv6Addrs = _('No IPv6 Address Found');
+      $ipv6Addrs[] = _('No IPv6 Address Found');
     } else {
-      $ipv6Addrs = implode('</br>', $matchesIpv6Addr[1]);
+      $ipv6Addrs = $matchesIpv6Addr[1];
     }
     preg_match('/state (UP|DOWN)/i', $stdoutIpWRepeatedSpaces, $matchesState) || $matchesState[1] = 'unknown';
     $interfaceState = $matchesState[1];
@@ -139,7 +139,18 @@ function DisplayDashboard()
                   <div class="info-item"><?php echo _("Interface Name"); ?></div> <?php echo $defaultInterface; ?><br />
                   <div class="info-item"><?php echo _("IPv4 Address"); ?></div> <?php echo htmlspecialchars($ipv4Addrs, ENT_QUOTES); ?><br />
                   <div class="info-item"><?php echo _("Subnet Mask"); ?></div> <?php echo htmlspecialchars($ipv4Netmasks, ENT_QUOTES); ?><br />
-                  <div class="info-item"><?php echo _("IPv6 Address"); ?></div> <?php echo htmlspecialchars($ipv6Addrs, ENT_QUOTES); ?><br />
+                  <?php 
+                  $i = 0;
+                  foreach($ipv6Addrs as $curIpv6){
+                    if($i==0){
+                      echo('<div class="info-item">'._("IPv6 Address").'</div>');
+                    }else{
+                      echo('<div class="info-item">&nbsp</div>');
+                    }
+                    echo(htmlspecialchars($curIpv6, ENT_QUOTES).'<br/>');
+                    $i++;
+                  }?>
+                  <!-- <div class="info-item"><?php echo _("IPv6 Address"); ?></div> <?php echo($ipv6Addrs); ?><br /> -->
                   <div class="info-item"><?php echo _("Mac Address"); ?></div> <?php echo htmlspecialchars($macAddr, ENT_QUOTES); ?><br /><br />
                 </div><!-- /.panel-body -->
               </div><!-- /.panel-default -->
