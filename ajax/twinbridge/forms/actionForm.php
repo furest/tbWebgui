@@ -6,7 +6,7 @@
     <p></p>
     <h4> <?php echo _("Create or join lab");?> </h4>
     <div class="btn-group btn-block">
-      <a href="#" style="padding:10px;float: right;display: block;position: relative;margin-top: -55px;" class="col-md-2 btn btn-danger" id="kill" onclick="killVPN()" csrf="<?php echo htmlspecialchars($_SESSION['csrf_token'], ENT_QUOTES);?>">Disconnect</a>
+      <a href="#" style="padding:10px;float: right;display: block;position: relative;margin-top: -45px;" class="col-md-2 btn btn-danger" id="kill" onclick="killVPN()" csrf="<?php echo htmlspecialchars($_SESSION['csrf_token'], ENT_QUOTES);?>">Disconnect</a>
     </div>
     <form id="actionForm">
         <?php CSRFToken() ?>
