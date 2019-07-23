@@ -51,8 +51,6 @@ function DisplayHostAPDConfig()
     if (CSRFValidate()) {
       $status->addMessage('Attempting to restart hotspot', 'info');
       exec('sudo systemctl restart hostapd', $return);
-      sleep(3);
-      var_dump($return);
       foreach ($return as $line) {
         $status->addMessage($line, 'info');
       }
