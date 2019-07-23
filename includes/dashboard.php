@@ -32,6 +32,23 @@ function DisplayDashboard()
   }
   if ($defaultInterface != NULL) {
     $status->addMessage(_('Interface currently in use is ' . $defaultInterface), 'success');
+    $curl = curl_init("http://google.com");
+    $curlopts = array(
+      CURLOPT_RETURNTRANSFER => true,   // return content
+      CURLOPT_HEADER         => false,  // don't return headers
+      CURLOPT_CONNECTTIMEOUT => 5,    // time-out on connect : 5 seconds
+      CURLOPT_IPERSOLVE      => CURL_IPRESOLVE_V4,
+      CURLOPT_INTERFACE      => $defaultInterface,  //forces the queries to originate from the current default interface
+    );
+    curl_setopt_array($curl, $curlopts);
+    $ret = curl_exec($curl);
+    if($ret == false){
+      $status->addMessage(_('Internet is currently inaccessible through the current default interface'), 'warning');
+    }
+
+
+
+
     exec('ip a show ' . $defaultInterface, $stdoutIp);
     $stdoutIpAllLinesGlued = implode(" ", $stdoutIp);
     $stdoutIpWRepeatedSpaces = preg_replace('/\s\s+/', ' ', $stdoutIpAllLinesGlued);
@@ -150,7 +167,6 @@ function DisplayDashboard()
                     echo(htmlspecialchars($curIpv6, ENT_QUOTES).'<br/>');
                     $i++;
                   }?>
-                  <!-- <div class="info-item"><?php echo _("IPv6 Address"); ?></div> <?php echo($ipv6Addrs); ?><br /> -->
                   <div class="info-item"><?php echo _("Mac Address"); ?></div> <?php echo htmlspecialchars($macAddr, ENT_QUOTES); ?><br /><br />
                 </div><!-- /.panel-body -->
               </div><!-- /.panel-default -->
