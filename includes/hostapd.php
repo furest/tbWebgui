@@ -18,13 +18,19 @@ function DisplayHostAPDConfig()
   if (isset($_POST['SaveHostAPDSettings'])) {
     if (CSRFValidate()) {
       SaveHostAPDConfig($arrSecurity, $arrEncType, $arr80211Standard, $status);
+      if(isset($_POST['acs']) && $_POST['acs'] == "on"){
+        exec("sudo systemctl enable hostapd_autochannel");
+      } else {
+        exec("sudo systemctl disable hostapd_autochannel");
+      }
     } else {
       error_log('CSRF violation');
     }
   } elseif (isset($_POST['StartHotspot'])) {
     if (CSRFValidate()) {
       $status->addMessage('Attempting to start hotspot', 'info');
-      exec('sudo /etc/raspap/hostapd/servicestart.sh --seconds 5', $return);
+      //exec('sudo /etc/raspap/hostapd/servicestart.sh --seconds 5', $return);
+      exec('sudo systemctl start hostapd', $return);
       foreach ($return as $line) {
         $status->addMessage($line, 'info');
       }
@@ -34,7 +40,7 @@ function DisplayHostAPDConfig()
   } elseif (isset($_POST['StopHotspot'])) {
     if (CSRFValidate()) {
       $status->addMessage('Attempting to stop hotspot', 'info');
-      exec('sudo /etc/init.d/hostapd stop', $return);
+      exec('sudo systemctl stop hostapd', $return);
       foreach ($return as $line) {
         $status->addMessage($line, 'info');
       }
@@ -44,7 +50,9 @@ function DisplayHostAPDConfig()
   } elseif (isset($_POST['RestartHotspot'])) {
     if (CSRFValidate()) {
       $status->addMessage('Attempting to restart hotspot', 'info');
-      exec('sudo /etc/init.d/hostapd restart', $return);
+      exec('sudo systemctl restart hostapd', $return);
+      sleep(3);
+      var_dump($return);
       foreach ($return as $line) {
         $status->addMessage($line, 'info');
       }
@@ -151,6 +159,13 @@ function DisplayHostAPDConfig()
   exec('pidof dnsmasq | wc -l', $dnsmasq);
   $dnsmasq_state = ($dnsmasq[0] > 0);
 
+  $autochannel_enabled = false;
+  exec('systemctl is-enabled hostapd_autochannel', $autochannel_ret);
+  if($autochannel_ret[0] == "enabled"){
+    $autochannel_enabled = true;
+  }
+
+
   if (isset($_POST['startdhcpd'])) {
     if (CSRFValidate()) {
       if ($dnsmasq_state) {
@@ -227,7 +242,7 @@ function DisplayHostAPDConfig()
         <!-- /.panel-heading -->
         <div class="panel-body">
           <p><?php $status->showMessages(); ?></p>
-          <form role="form" action="?page=hostapd_conf" method="POST">
+          <form role="form" action="?page=hotspot_conf" method="POST">
             <!-- Nav tabs -->
             <ul class="nav nav-tabs">
               <li class="active"><a href="#basic" data-toggle="tab"><?php echo _("Basic"); ?></a></li>
@@ -262,7 +277,7 @@ function DisplayHostAPDConfig()
                     SelectorOptions('hw_mode', $arr80211Standard, $selectedHwMode, 'cbxhwmode'); ?>
                   </div>
                 </div>
-                <div class="row">
+                <div class="row" style="display: flex; display: -webkit-flex; flex-wrap: wrap; align-items: center;">
                   <div class="form-group col-md-4">
                     <label for="cbxchannel"><?php echo _("Channel"); ?></label>
                     <?php
@@ -287,6 +302,24 @@ function DisplayHostAPDConfig()
                       }
                     }
                     SelectorOptions('channel', $selectablechannels, intval($arrConfig['channel']), 'cbxchannel'); ?>
+                  </div>
+                  <div class="col-md-4">
+                    <div class="form-check form-check-inline">
+                      <input class="form-check-input" type="checkbox" name="acs" id="acs" <?php if($autochannel_enabled){echo('checked="true"');} ?>>
+                      <label class="form-check-label" for="acs">Enable Automatic channel selection</label>
+                    </div>
+                    <script type="text/javascript">
+                      function onAcsClick(){
+                        var acsEnabled = document.getElementById("acs").checked
+                        if(acsEnabled){
+                          document.getElementById("cbxchannel").disabled = true;
+                        } else {
+                          document.getElementById("cbxchannel").disabled = false;
+                        }
+                      }
+                      document.getElementById("acs").onchange = onAcsClick
+                      onAcsClick();
+                    </script>
                   </div>
                 </div>
                 <div class="row">

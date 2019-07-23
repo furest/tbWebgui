@@ -1,0 +1,14 @@
+[Unit]
+Description=Service that automatically selects the best channel for hostapd
+Before=hostapd.service
+PartOf=hostapd.service
+
+[Service]
+Type=oneshot
+EnvironmentFile=/etc/raspap/hostapd/hostapd_autochannel.env
+WorkingDirectory=/etc/raspap/hostapd
+ExecStart=/usr/bin/python3 hostapd_autochannel.py $INT $MAX_RSSI $MAX_BSSID_PER_CHANNEL
+
+[Install]
+WantedBy=hostapd.service
+

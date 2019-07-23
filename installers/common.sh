@@ -200,10 +200,6 @@ function download_latest_files() {
     install_log "Cloning latest files from github"
     git clone --depth 1 https://github.com/furest/tbWebgui /tmp/raspap-webgui || install_error "Unable to download files from github"
     sudo mv /tmp/raspap-webgui $webroot_dir || install_error "Unable to move raspap-webgui to web root"
-
-    # Move icons to webroot
-    #echo -n "Installing high-res favicons"
-    #sudo mv $webroot_dir/dist/icons/* $webroot_dir || install_error "Unable to move icons to web root"
 }
 
 # Sets files ownership in web root directory
@@ -217,16 +213,13 @@ function change_file_ownership() {
 }
 # Generate hostapd logging and service control scripts
 function create_hostapd_scripts() {
-    install_log "Creating hostapd logging & control scripts"
+    install_log "Creating hostapd control scripts"
     sudo mkdir $raspap_dir/hostapd || install_error "Unable to create directory '$raspap_dir/hostapd'"
-
-    # Move logging shell scripts 
-    sudo mv "$webroot_dir/installers/"*log.sh "$raspap_dir/hostapd" || install_error "Unable to move logging scripts"
-    # Move service control shell scripts
-    sudo mv "$webroot_dir/installers/"service*.sh "$raspap_dir/hostapd" || install_error "Unable to move service control scripts"
-    # Make enablelog.sh and disablelog.sh not writable by www-data group.
-    sudo chown -c root:"$raspap_user" "$raspap_dir/hostapd/"*.sh || install_error "Unable change owner and/or group."
-    sudo chmod 750 "$raspap_dir/hostapd/"*.sh || install_error "Unable to change file permissions."
+    sudo mv "$webroot_dir/installers/"*.py "$raspap_dir/hostapd" || install_error "Unable to move hostapd_autochannel scripts"
+    sudo mv "$webroot_dir/installers/"*.env "$raspap_dir/hostapd" || install_error "Unable to move service environment file"
+    sudo mv "$webroot_dir/installers/"*.service "/lib/systemd/system/" || install_error "Unable to move service file"
+    sudo systemctl daemon-reload
+    sudo systemctl enable hostapd_autochannel
 }
 
 
@@ -311,8 +304,11 @@ function patch_system_files() {
         "/bin/cp /tmp/dhcpcddata /etc/dhcpcd.conf"
 	"/bin/cp /tmp/ovpndata /etc/tbClient/client.ovpn"
 	"/bin/cp /tmp/hostsdata /etc/hosts"
-        "/etc/init.d/hostapd start"
-        "/etc/init.d/hostapd stop"
+	"/bin/systemctl enable hostapd_autochannel"
+	"/bin/systemctl disable hostapd_autochannel"
+	"/bin/systemctl start hostapd"
+	"/bin/systemctl restart hostapd"
+	"/bin/systemctl stop hostapd"
         "/etc/init.d/dnsmasq start"
         "/etc/init.d/dnsmasq stop"
         "/bin/cp /tmp/dhcpddata /etc/dnsmasq.conf"
@@ -323,9 +319,6 @@ function patch_system_files() {
         "/sbin/ip link set wlan[0-9] up"
         "/sbin/ip -s a f label wlan[0-9]"
         "/bin/cp /etc/raspap/networking/dhcpcd.conf /etc/dhcpcd.conf"
-        "/etc/raspap/hostapd/enablelog.sh"
-        "/etc/raspap/hostapd/disablelog.sh"
-        "/etc/raspap/hostapd/servicestart.sh"
         "/etc/tbClient/bin/flush.sh"
         "SETENV:/etc/tbClient/bin/phpConnect.py"
     )
@@ -363,9 +356,6 @@ function change_hostname(){
 function install_complete() {
     install_log "Installation completed!"
 
-    # Prompt to reboot if wired ethernet (eth0) is connected.
-    # With default_configuration this will create an active AP on restart.
-    if ip a | grep -q ': eth0:.*state UP'; then
         echo -n "The system needs to be rebooted as a final step. Reboot now? [y/N]: "
         read answer
         if [[ $answer != "y" ]]; then
@@ -373,7 +363,6 @@ function install_complete() {
             exit 0
         fi
         sudo shutdown -r now || install_error "Unable to execute shutdown"
-    fi
 }
 
 function install_raspap() {
