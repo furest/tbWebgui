@@ -310,9 +310,9 @@ function DisplayHostAPDConfig()
                       function onAcsClick(){
                         var acsEnabled = document.getElementById("acs").checked
                         if(acsEnabled){
-                          document.getElementById("cbxchannel").disabled = true;
+                          document.getElementById("cbxchannel").setAttribute("readonly", true)
                         } else {
-                          document.getElementById("cbxchannel").disabled = false;
+                          document.getElementById("cbxchannel").setAttribute("readonly", false)
                         }
                       }
                       document.getElementById("acs").onchange = onAcsClick
@@ -480,7 +480,7 @@ function DisplayHostAPDConfig()
                       <option value="MM">Myanmar</option>
                       <option value="NA">Namibia</option>
                       <option value="NR">Nauru</option>
-                      <option value="NP">Nepal</option>
+                      <option valu      var_dump($return);e="NP">Nepal</option>
                       <option value="NL">Netherlands</option>
                       <option value="NC">New Caledonia</option>
                       <option value="NZ">New Zealand</option>
