@@ -29,7 +29,6 @@ function DisplayHostAPDConfig()
   } elseif (isset($_POST['StartHotspot'])) {
     if (CSRFValidate()) {
       $status->addMessage('Attempting to start hotspot', 'info');
-      //exec('sudo /etc/raspap/hostapd/servicestart.sh --seconds 5', $return);
       exec('sudo systemctl start hostapd', $return);
       foreach ($return as $line) {
         $status->addMessage($line, 'info');
