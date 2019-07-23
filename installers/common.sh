@@ -131,9 +131,9 @@ function optimize_php() {
     fi
     #Disable lighttpd output buffering
     if [ grep -c "server.stream-response-body" /etc/lighttpd/lighttpd.conf -eq 0 ]; then
-	    sed -i "s/\(server.stream-response-body *= *\).*/\11/" lighttpd.conf
+	echo "server.stream-response-body = 1" >> /etc/lighttpd/lighttpd.conf    
     else
-	    echo "server.stream-response-body = 1" >> /etc/lighttpd/lighttpd.conf
+	sed -i "s/\(server.stream-response-body *= *\).*/\11/" lighttpd.conf
     fi
 }
 
