@@ -346,7 +346,7 @@ function install_tbclient(){
     install_log "Installing tbClient"
     sudo mkdir /etc/tbClient
     git clone https://github.com/furest/tbClient /etc/tbClient
-    sudo /etc/tbClient/setup.sh
+    bash /etc/tbClient/setup.sh
 }
 
 function change_hostname(){
