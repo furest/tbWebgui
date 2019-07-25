@@ -14,7 +14,7 @@
 
     $srvIP = long2ip($intNetId+1);
 
-
+    session_write_close();  
     $errno=0;
     $errmsg="";
     $fsock = fsockopen($srvIP, 1500, $errno, $errmsg);
