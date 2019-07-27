@@ -33,5 +33,6 @@
     $jsonResponse = json_decode($response, true);
     if($jsonResponse == NULL){
         echo('{"error":true, "reason":"Response is not JSON"}');
+        die();
     }
     echo($response); 

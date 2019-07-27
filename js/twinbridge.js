@@ -79,15 +79,33 @@ function displayError(errorMsg){
             return;
         }
         $("#twinBridgeContent").html(jsonData.response);
-        $("#menu").click(function(){
-            var displayPromise = displayActionForm();
-            displayPromise.fail(function(data){
-                displayError(data);
-            });
-        });
+        $("#quit").click(QuitLab);
         deferred.resolve();
     });
     return deferred.promise()
+}
+
+function QuitLab(){
+    var deferred = $.Deferred();
+    var csrf = $('#quit').attr("csrf");
+    var params = {};
+    params['csrf_token'] = csrf;
+    $.post('/ajax/twinbridge/scripts/quitLab.php', params, function(data){
+        jsonData = JSON.parse(data);
+        if(jsonData.error != false){
+            deferred.reject(jsonData.reason)
+            return;
+        }
+        var promise = showTbStatus();
+        relayPromise(promise, deferred);
+
+    });
+
+    var deferredPromise = deferred.promise();
+    deferredPromise.fail(function(data){
+        displayError(data);
+    });
+
 }
 
 function showLoading(){

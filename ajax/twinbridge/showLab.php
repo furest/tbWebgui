@@ -22,7 +22,7 @@
     $page .= '<div class="info-item">Since</div>'.$since.'<br>';
     $page .= '<div class="info-item">Your IP</div>'.$ip.'<br>';
     $page .= '<br>';
-    $page .= '<a class="btn btn-lg btn-primary" id="menu" name="menu" >Menu</a>';
+    $page .= '<a class="btn btn-lg btn-warning" id="quit" name="quit" csrf="'.htmlspecialchars($_SESSION['csrf_token'], ENT_QUOTES).'">Terminate Lab</a>';
     $page .= '</div>';
 
     $response = array(
