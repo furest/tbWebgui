@@ -47,20 +47,23 @@ function install_warning() {
 
 # Outputs a welcome message
 function display_welcome() {
-    raspberry='\033[0;35m'
-    green='\033[1;32m'
-
-    echo -e "${raspberry}\n"
-    echo -e " 888888ba                              .d888888   888888ba" 
-    echo -e " 88     8b                            d8     88   88     8b" 
-    echo -e "a88aaaa8P' .d8888b. .d8888b. 88d888b. 88aaaaa88a a88aaaa8P" 
-    echo -e " 88    8b. 88    88 Y8ooooo. 88    88 88     88   88" 
-    echo -e " 88     88 88.  .88       88 88.  .88 88     88   88" 
-    echo -e " dP     dP  88888P8  88888P  88Y888P  88     88   dP" 
-    echo -e "                             88"                             
-    echo -e "                             dP"                             
-    echo -e "${green}"
-    echo -e "The Quick Installer will guide you through a few easy steps\n\n"
+    green='\033[0;32m'
+    cyan='\033[1;36m'
+    #Font is "Colossal" on http://patorjk.com/software/taag/#p=display&h=0&v=1&f=Colossal&t=Twinbridge
+    echo -e "${green}\n"
+    echo -e "88888888888               d8b          888              d8b      888                           "
+    echo -e "    888                   Y8P          888              Y8P      888                           "
+    echo -e "    888                                888                       888                           "
+    echo -e "    888     888  888  888 888 88888b.  88888b.  888d888 888  .d88888  .d88b.   .d88b.          "
+    echo -e "    888     888  888  888 888 888 \"88b 888 \"88b 888P\"   888 d88\" 888 d88P\"88b d8P  Y8b    "
+    echo -e "    888     888  888  888 888 888  888 888  888 888     888 888  888 888  888 88888888         "
+    echo -e "    888     Y88b 888 d88P 888 888  888 888 d88P 888     888 Y88b 888 Y88b 888 Y8b.             "
+    echo -e "    888      \"Y8888888P\"  888 888  888 88888P\"  888     888  \"Y88888  \"Y88888  \"Y8888    "
+    echo -e "                                                                          888                     "
+    echo -e "                                                                     Y8b d88P                    "
+    echo -e "                                                                      \"Y88P\"                    "
+    echo -e "${cyan}"
+    echo -e "The Installer will guide you through a few easy steps\n\n"
 }
 
 ### NOTE: all the below functions are overloadable for system-specific installs
@@ -108,25 +111,17 @@ function optimize_php() {
     sudo cp "$phpcgiconf" "$raspap_dir/backups/php.ini.$datetimephpconf"
     sudo ln -sf "$raspap_dir/backups/php.ini.$datetimephpconf" "$raspap_dir/backups/php.ini"
 
-    echo -n "Enable HttpOnly for session cookies (Recommended)? [Y/n]: "
-    read answer
-    if [ "$answer" != 'n' ] && [ "$answer" != 'N' ]; then
-        echo "Php-cgi enabling session.cookie_httponly."
-        sudo sed -i -E 's/^session\.cookie_httponly\s*=\s*(0|([O|o]ff)|([F|f]alse)|([N|n]o))\s*$/session.cookie_httponly = 1/' "$phpcgiconf"
-    fi
+    echo "Php-cgi enabling session.cookie_httponly."
+    sudo sed -i -E 's/^session\.cookie_httponly\s*=\s*(0|([O|o]ff)|([F|f]alse)|([N|n]o))\s*$/session.cookie_httponly = 1/' "$phpcgiconf"
 
     if [ "$php_version" = "php7.0" ] || [ "$php_version" = "php7.3" ]; then
-        echo -n "Enable PHP OPCache (Recommended)? [Y/n]: "
-        read answer
-        if [ "$answer" != 'n' ] && [ "$answer" != 'N' ]; then
-            echo "Php-cgi enabling opcache.enable."
-            sudo sed -i -E 's/^;?opcache\.enable\s*=\s*(0|([O|o]ff)|([F|f]alse)|([N|n]o))\s*$/opcache.enable = 1/' "$phpcgiconf"
-            # Make sure opcache extension is turned on.
-            if [ -f "/usr/sbin/phpenmod" ]; then
-                sudo phpenmod opcache
-            else
-                install_warning "phpenmod not found."
-            fi
+        echo "Php-cgi enabling opcache.enable."
+        sudo sed -i -E 's/^;?opcache\.enable\s*=\s*(0|([O|o]ff)|([F|f]alse)|([N|n]o))\s*$/opcache.enable = 1/' "$phpcgiconf"
+        # Make sure opcache extension is turned on.
+        if [ -f "/usr/sbin/phpenmod" ]; then
+	    sudo phpenmod opcache
+        else
+    	    install_warning "phpenmod not found."
         fi
     fi
     #Disable lighttpd output buffering
