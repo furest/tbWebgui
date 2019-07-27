@@ -104,7 +104,7 @@ function WriteWPASupplicant($networks){
             $wpasup .= "\tkey_mgmt=WPA-PSK" . PHP_EOL;
             exec('wpa_passphrase ' . escapeshellarg($ssid) . ' ' . escapeshellarg($network['passphrase']), $wpa_passphrase);
             foreach ($wpa_passphrase as $line) {
-                if (preg_match('/^\s*#?psk=([a-fA-F0-9]+|[\"a-zA-Z0-9_-]+)\s*$/', $line)) {
+                if (preg_match('/^\s*#?psk=.*$/', $line)) {
                     $wpasup .= $line . PHP_EOL;
                 }
             }
