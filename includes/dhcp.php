@@ -59,7 +59,7 @@ function DisplayDHCPConfig()
                     $config .= $_POST['RangeLeaseTime'];
                 }
                 $config .= $_POST['RangeLeaseTimeUnits'];
-                exec('echo "'.escapeshellarg($config).'" > /tmp/dnsmasqdata', $temp);
+                exec('echo '.escapeshellarg($config).' > /tmp/dnsmasqdata', $temp);
 		system('sudo cp /tmp/dnsmasqdata '.RASPI_DNSMASQ_CONFIG);
 		$ret = gen_config();
 		$jsonRet = $ret;
