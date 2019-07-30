@@ -130,7 +130,7 @@ function DisplayHostAPDConfig()
           $config .= $_POST['RangeLeaseTime'];
         }
         $config .= $_POST['RangeLeaseTimeUnits'];
-        exec('echo "' . $config . '" > /tmp/dnsmasqdata', $temp);
+        exec('echo "' . escapeshellarg($config) . '" > /tmp/dnsmasqdata', $temp);
         system('sudo cp /tmp/dnsmasqdata ' . RASPI_DNSMASQ_CONFIG);
         $ret = gen_config();
         $jsonRet = $ret;
@@ -787,7 +787,7 @@ function SaveHostAPDConfig($wpa_array, $enc_types, $modes, $status)
     $config .= 'country_code=' . $_POST['country_code'] . PHP_EOL;
     $config .= 'ignore_broadcast_ssid=' . $ignore_broadcast_ssid . PHP_EOL;
 
-    exec('echo "' . $config . '" > /tmp/hostapddata', $temp);
+    exec('echo "' . escapeshellarg($config) . '" > /tmp/hostapddata', $temp);
     system("sudo cp /tmp/hostapddata " . RASPI_HOSTAPD_CONFIG, $return);
 
     if ($return == 0) {
