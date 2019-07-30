@@ -257,7 +257,7 @@ function DisplayWPAConfig()
     }    
 
     if(isset($_POST['connect']) && CSRFValidate()){
-        exec('sudo wpa_cli -i '.RASPI_WIFI_CLIENT_INTERFACE." select_network `sudo wpa_cli list_networks | awk -F'\\t' '($2 == \"".$_POST['ssid'.$_POST['connect']]."\"){print $1}'` 2>&1");
+        exec('sudo wpa_cli -i '.RASPI_WIFI_CLIENT_INTERFACE." select_network `sudo wpa_cli list_networks | awk -F'\\t' '($2 == \"".escapeshellarg($_POST['ssid'.$_POST['connect']])."\"){print $1}'` 2>&1");
     }
 
     $scanned_networks = GetSurroundingNetworks();
