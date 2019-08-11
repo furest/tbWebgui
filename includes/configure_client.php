@@ -146,6 +146,9 @@ function GetSurroundingNetworks(){
          * 4 is SSID
          */
         $ssid = $arrNetwork[4]??"";
+        if(preg_match('/^[\\\\x00]+$/', $ssid, $dummy)){ #Networks with SSID set to \x00\x00\x00\x00\x00... are actually just weird hidden network
+            $ssid = ""; 
+        }
         $scanned_networks[$ssid] = array(
             'configured' => false,
             'protocol' => ConvertToSecurity($arrNetwork[3]),
@@ -319,8 +322,11 @@ function DisplayWPAConfig()
                                         }
                                     </script>
 
-                                    <?php $index = 0; ?>
-                                    <?php foreach ($all_networks as $ssid => $network) { ?>
+                                        <?php 
+                                        $index = 0;
+                                        foreach ($all_networks as $ssid => $network) { 
+                                        if($ssid==""){continue;}
+                                        ?>
                                         <div class="col-md-6">
                                             <div class="panel panel-default" <?php if(!$network["visible"]){echo('style="background:#DDDDDD;"');}?>>
                                                 <div class="panel-body">
