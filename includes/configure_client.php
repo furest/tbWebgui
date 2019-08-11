@@ -146,7 +146,7 @@ function GetSurroundingNetworks(){
          * 4 is SSID
          */
         $ssid = $arrNetwork[4]??"";
-        if(preg_match('/^[\\\\x00]+$/', $ssid, $dummy)){ #Networks with SSID set to \x00\x00\x00\x00\x00... are actually just weird hidden network
+        if(preg_match('/^[\\\\x00]+$/', $ssid)){ #Networks with SSID set to \x00\x00\x00\x00\x00... are actually just weird hidden network
             $ssid = ""; 
         }
         $scanned_networks[$ssid] = array(
