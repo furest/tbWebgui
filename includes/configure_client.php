@@ -381,38 +381,55 @@ function DisplayWPAConfig()
                                                         <div class="col-xs-6 col-md-6"><?php echo $network['protocol'] ?></div>
                                                     </div>
                                                     <?php if (preg_match('/^(WPA\d?-EAP)/', $network['protocol'])) { ?>
-                                                        <div class="form-group">
-                                                            <div class="input-group col-xs-12 col-md-12">
-                                                                <span class="input-group-addon" id="phase1">Phase 1</span>
-                                                                <select <?php if(!$network["visible"]){echo('disabled');}?> class="form-control" aria-describedby="" name="firstphase<?php echo $index ?>">
-                                                                    <option <?php if ($network['firstphase'] == "PEAP") {
-                                                                                echo ('selected="true"');
-                                                                            } ?>>PEAP</option>
-                                                                    <option <?php if ($network['firstphase'] == "TLS") {
-                                                                                echo ('selected="true"');
-                                                                            } ?>>TLS</option>
-                                                                    <option <?php if ($network['firstphase'] == "TTLS") {
-                                                                                echo ('selected="true"');
-                                                                            } ?>>TTLS</option>
-                                                                </select>
+                                                        <?php if(RASPI_ADVANCED_RADIUS_CONFIG){
+                                                            ?>
+                                                            <div class="form-group">
+                                                                <div class="input-group col-xs-12 col-md-12">
+                                                                    <span class="input-group-addon" id="phase1">Phase 1</span>
+                                                                    <select <?php if(!$network["visible"]){echo('disabled');}?> class="form-control" aria-describedby="" name="firstphase<?php echo $index ?>">
+                                                                        <option <?php if (!isset($network['firstphase']) || $network['firstphase'] == NULL || $network['firstphase'] == "PEAP") {
+                                                                                    echo ('selected="true"');
+                                                                                } ?>>PEAP</option>
+                                                                        <option <?php if ($network['firstphase'] == "TLS") {
+                                                                                    echo ('selected="true"');
+                                                                                } ?>>TLS</option>
+                                                                        <option <?php if ($network['firstphase'] == "TTLS") {
+                                                                                    echo ('selected="true"');
+                                                                                } ?>>TTLS</option>
+                                                                    </select>
+                                                                </div>
                                                             </div>
-                                                        </div>
-                                                        <div class="form-group">
-                                                            <div class="input-group col-xs-12 col-md-12">
-                                                                <span class="input-group-addon" id="phase2">Phase 2</span>
-                                                                <select <?php if(!$network["visible"]){echo('disabled');}?> class="form-control" aria-describedby="" name="secondphase<?php echo $index ?>">
-                                                                    <option <?php if ($network['secondphase'] == "None") {
-                                                                                echo ('selected="true"');
-                                                                            } ?>>None</option>
-                                                                    <option <?php if ($network['secondphase'] == "MSCHAPV2") {
-                                                                                echo ('selected="true"');
-                                                                            } ?>>MSCHAPV2</option>
-                                                                    <option <?php if ($network['secondphase'] == "MD5") {
-                                                                                echo ('selected="true"');
-                                                                            } ?>>MD5</option>
-                                                                </select>
+                                                            <div class="form-group">
+                                                                <div class="input-group col-xs-12 col-md-12">
+                                                                    <span class="input-group-addon" id="phase2">Phase 2</span>
+                                                                    <select <?php if(!$network["visible"]){echo('disabled');}?> class="form-control" aria-describedby="" name="secondphase<?php echo $index ?>">
+                                                                        <option <?php if (!isset($network['secondphase']) || $network['secondphase'] == NULL || $network['secondphase'] == "MSCHAPV2") {
+                                                                                    echo ('selected="true"');
+                                                                                } ?>>MSCHAPV2</option>
+                                                                        <option <?php if ($network['secondphase'] == "None") {
+                                                                                    echo ('selected="true"');
+                                                                                } ?>>None</option>
+                                                                        <option <?php if ($network['secondphase'] == "MD5") {
+                                                                                    echo ('selected="true"');
+                                                                                } ?>>MD5</option>
+                                                                    </select>
+                                                                </div>
                                                             </div>
-                                                        </div>
+                                                            <?php
+                                                        } else {
+                                                            $firstphase = $network['firstphase'];
+                                                            $secondphase = $network['secondphase'];
+                                                            if(!isset($network['firstphase']) || $network['firstphase'] == NULL || $network['firstphase'] == ""){
+                                                                $firstphase = "PEAP";
+                                                            }
+                                                            if(!isset($network['secondphase']) || $network['secondphase'] == NULL || $network['secondphase'] == ""){
+                                                                $secondphase = "MSCHAPV2";
+                                                            }
+                                                            echo('<input type="hidden" name="firstphase'.$index.'" value="'.$firstphase.'" />');
+                                                            echo('<input type="hidden" name="secondphase'.$index.'" value="'.$secondphase.'" />');
+                                                            
+                                                        }
+                                                        ?>
                                                         <div class="form-group">
                                                             <div class="input-group col-xs-12 col-md-12">
                                                                 <span class="input-group-addon" id="username">Username</span>
