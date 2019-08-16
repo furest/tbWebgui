@@ -3,7 +3,6 @@ function showTbStatus(){
     $.get('/ajax/twinbridge/scripts/getVpnStatus.php',function(data){
         jsonData = JSON.parse(data);
         if (jsonData.error != false){
-            //displayError(jsonData.reason); //synchronous
             deferred.reject(jsonData.reason);
             return;
         }
@@ -75,7 +74,6 @@ function displayError(errorMsg){
         jsonData = JSON.parse(data);
         if(jsonData.error != false){
             deferred.reject(jsonData.reason);
-            //displayError(jsonData.reason);
             return;
         }
         $("#twinBridgeContent").html(jsonData.response);
@@ -155,10 +153,6 @@ function showLoading(){
                     displayError(showData);
                 })
             });
-            
-            
-
-            
         });
         deferred.resolve();
     });
@@ -236,9 +230,6 @@ function displayActionForm(){
     $.post('/ajax/twinbridge/scripts/connectTwinBridge.php', logins, function(data){
         jsonData = JSON.parse(data)
         if(jsonData.error != false){
-           //alert("error : " + jsonData.reason);
-            //showTbStatus();
-           //displayError(jsonData.reason);
            deferred.reject(jsonData.reason);
            return;
         }
@@ -285,8 +276,6 @@ function displayActionForm(){
     $.post('/ajax/twinbridge/scripts/invite.php', formAttr, function(data){
         jsonData = JSON.parse(data);
         if(jsonData.error != false){
-            //alert("error : " + jsonData.reason);
-            //displayError(jsonData.reason);
             deferred.reject(jsonData.reason);
             return;
         }
