@@ -238,7 +238,8 @@ function default_configuration() {
     fi
     sudo mv $webroot_dir/config/default_hostapd /etc/default/hostapd || install_error "Unable to move hostapd defaults file"
     sudo mv $webroot_dir/config/hostapd.conf /etc/hostapd/hostapd.conf || install_error "Unable to move hostapd configuration file"
-    sudo mv $webroot_dir/config/dnsmasq.conf /etc/dnsmasq.conf || install_error "Unable to move dnsmasq configuration file"
+    sudo rm /etc/dnsmasq.conf
+    sudo mv $webroot_dir/config/dnsmasq-wlan0.conf /etc/dnsmasq.d/dnsmasq-wlan0.conf || install_error "Unable to move dnsmasq configuration file"
     sudo mv $webroot_dir/config/dhcpcd.conf /etc/dhcpcd.conf || install_error "Unable to move dhdpcd.conf configuration file"
     sudo mv $webroot_dir/config/defaults $raspap_dir/networking/defaults || install_error "Unable to move default networking configuration file"
     sudo mv $webroot_dir/config/wlan0.ini $raspap_dir/networking/wlan0.ini || install_error "Unable to move wlan0 configuration file"
