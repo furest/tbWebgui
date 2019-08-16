@@ -123,9 +123,9 @@ function DisplayHostAPDConfig()
         $newHosts = preg_replace('/(.*\s+)(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})(\s*' . $hostname . '\s*)/', '${1}' . long2ip($firstIp) . '${3}', $hosts);
         file_put_contents("/tmp/hostsdata", $newHosts);
         exec('sudo /bin/cp /tmp/hostsdata /etc/hosts');
-        $config = 'interface=' . RASPI_WIFI_HOTSPOT_INTERFACE . PHP_EOL .
-          'dhcp-range=' . long2ip($firstIp + 1) . ',' . $_POST['RangeEnd'] .
-          ',255.255.255.0,';
+        $config  = 'interface=' . RASPI_WIFI_HOTSPOT_INTERFACE . PHP_EOL;
+        $config  .= "bind-interfaces". PHP_EOL;
+        $config .= 'dhcp-range=' . long2ip($firstIp + 1) . ',' . $_POST['RangeEnd'] .',255.255.255.0,';
         if ($_POST['RangeLeaseTimeUnits'] !== 'infinite') {
           $config .= $_POST['RangeLeaseTime'];
         }
