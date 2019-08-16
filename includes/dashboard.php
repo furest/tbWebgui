@@ -37,7 +37,7 @@ function DisplayDashboard()
       CURLOPT_RETURNTRANSFER => true,   // return content
       CURLOPT_HEADER         => false,  // don't return headers
       CURLOPT_CONNECTTIMEOUT => 5,    // time-out on connect : 5 seconds
-      CURLOPT_IPERSOLVE      => CURL_IPRESOLVE_V4,
+      CURLOPT_IPRESOLVE      => CURL_IPRESOLVE_V4,
       CURLOPT_INTERFACE      => $defaultInterface,  //forces the queries to originate from the current default interface
     );
     curl_setopt_array($curl, $curlopts);
