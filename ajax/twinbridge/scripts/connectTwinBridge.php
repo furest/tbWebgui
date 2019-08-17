@@ -12,6 +12,7 @@
 	$jsonoutput = json_decode($output, true);
 	if($jsonoutput['error'] == false && isset($_POST['packetbridge']) && $_POST['packetbridge'] == true){
 		$clientIP = $_SERVER['REMOTE_ADDR'];
+		exec('sudo pkill -F /tmp/packetbridge.pid');
 		exec('sudo /bin/bash /etc/tbClient/bin/PacketBridge.sh vxlan0 '.$clientIP.':38000 cisco', $pid);
 		if($pid[0] == "firewallerror"){
 			$command = "sudo ".TWINBRIDGE_DIR."/bin/flush.sh";
