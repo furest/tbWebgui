@@ -222,7 +222,7 @@ function displayActionForm(){
     var form = $("#connectionForm").find(":input");
     var logins = {};
     $.each(form, function(k, v){
-        if($(v).attr("name") == "username" || $(v).attr("name") == "password" || $(v).attr("name") == "csrf_token"){
+        if($(v).attr("name") == "username" || $(v).attr("name") == "password" || $(v).attr("name") == "csrf_token" || $(v).attr('name') === "packetbridge"){
             logins[$(v).attr("name")] = $(v).val();
         }
     });

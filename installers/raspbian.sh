@@ -9,7 +9,7 @@ function update_system_packages() {
 
 function install_dependencies() {
     install_log "Installing required packages"
-    sudo apt-get install lighttpd $php_version-cgi $php_version-xml $php_version-curl git hostapd dnsmasq vnstat || install_error "Unable to install dependencies"
+    sudo apt-get install lighttpd $php_version-cgi $php_version-xml $php_version-curl git hostapd dnsmasq vnstat openjdk-8-jre-headless libpcap0.8 || install_error "Unable to install dependencies"
 }
 
 function install_additionnal_drivers() {
