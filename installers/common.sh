@@ -342,7 +342,7 @@ function patch_system_files() {
 function install_tbclient(){
     install_log "Installing tbClient"
     sudo mkdir /etc/tbClient
-    git clone -b packetbridge https://github.com/furest/tbClient/etc/tbClient
+    git clone -b packetbridge https://github.com/furest/tbClient /etc/tbClient
     sudo bash /etc/tbClient/setup.sh
 }
 
