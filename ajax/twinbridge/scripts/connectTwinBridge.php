@@ -14,10 +14,15 @@
 		$clientIP = $_SERVER['REMOTE_ADDR'];
 		exec('sudo pkill -F /tmp/packetbridge.pid');
 		exec('sudo /bin/bash /etc/tbClient/bin/PacketBridge.sh vxlan0 '.$clientIP.':38000 cisco', $pid);
-		if($pid[0] == "firewallerror"){
+		if($pid[0] == "firewallerror" || $pid[0] == "nopterror"){
 			$command = "sudo ".TWINBRIDGE_DIR."/bin/flush.sh";
 			shell_exec($command);
-			echo '{"error":true, "reason":"Bad firewall rule"}';
+			if($pid[0] == "firewallerror"){
+				echo '{"error":true, "reason":"Bad firewall rule"}';
+			} elseif($pid[0] == "nopterror"){
+				echo '{"error":true, "reason":"Packet Tracer is not running"}';
+			}
+			
 			die();
 		}
 		$pidfile = fopen('/tmp/packetbridge.pid', "w");
