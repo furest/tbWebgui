@@ -317,7 +317,8 @@ function patch_system_files() {
         "/bin/cp /etc/raspap/networking/dhcpcd.conf /etc/dhcpcd.conf"
         "/etc/tbClient/bin/flush.sh"
         "SETENV:/etc/tbClient/bin/phpConnect.py"
-	"/bin/bash /etc/tbClient/bin/PacketBridge.sh"
+	"/bin/bash /etc/tbClient/bin/PacketBridge.sh *"
+	"/usr/bin/pkill -F /tmp/packetbridge.pid"
     )
 
     # Check if sudoers needs patching
