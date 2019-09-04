@@ -305,6 +305,7 @@ function patch_system_files() {
 	"/bin/systemctl start hostapd"
 	"/bin/systemctl restart hostapd"
 	"/bin/systemctl stop hostapd"
+	"/bin/systemctl restart dhcpcd"
         "/etc/init.d/dnsmasq start"
         "/etc/init.d/dnsmasq stop"
         "/bin/cp /tmp/dhcpddata /etc/dnsmasq.conf"
