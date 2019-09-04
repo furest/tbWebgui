@@ -146,6 +146,8 @@ $().ready(function(){
             getAllInterfaces();
             setupTabs();
             setupBtns();
+            var curTab = $(".panel-body").find("[class=active]")[0].innerText;
+	        loadCurrentSettings(curTab);
         break;
     }
 });
